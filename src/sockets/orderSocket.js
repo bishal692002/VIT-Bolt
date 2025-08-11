@@ -1,9 +1,18 @@
 import { Server } from 'socket.io';
 import Order from '../models/Order.js';
+import jwt from 'jsonwebtoken';
 
 export default function orderSocket(httpServer) {
   const io = new Server(httpServer, { cors: { origin: '*' } });
   io.on('connection', (socket) => {
+    // Optional JWT auth via query token
+    const token = socket.handshake.auth?.token || socket.handshake.query?.token;
+    if (token) {
+      try {
+        const payload = jwt.verify(token, process.env.JWT_SECRET || 'dev_jwt');
+        socket.join(payload.id);
+      } catch {}
+    }
     socket.on('join_user', (userId) => {
       socket.join(userId);
     });

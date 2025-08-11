@@ -1,0 +1,11 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Rider Dashboard - VITato</title><link rel="stylesheet" href="/css/tailwind.css"><style>body{font-family:Inter,system-ui,sans-serif;background:#FAFAFA;color:#333}.gradient-header{background:linear-gradient(90deg,#FFD54F,#f7c63a);} .badge{padding:2px 6px;border-radius:12px;font-size:10px}body{opacity:1;transition:opacity .16s ease,transform .24s cubic-bezier(.4,0,.2,1);}body.page-enter{opacity:0;transform:translateY(4px);}body.page-enter-active{opacity:1;transform:translateY(0);}body.page-exit{opacity:0;transform:translateY(-4px);} </style></head><body class="min-h-screen flex flex-col">
+<header class="gradient-header text-gray-900 py-4 px-6 flex justify-between items-center sticky top-0 shadow-sm"><h1 class="font-semibold">Delivery Rider</h1><nav class="flex items-center space-x-4 text-sm"><a href="/rider.html" class="underline">Dashboard</a><button id="logoutBtn">Logout</button></nav></header>
+<main class="flex-1 px-6 py-6 max-w-5xl mx-auto">
+  <section class="mb-8"><h2 class="text-lg font-semibold mb-3">Available Orders</h2><div id="availableOrders" class="space-y-3 text-sm"></div></section>
+  <section><h2 class="text-lg font-semibold mb-3">My Deliveries</h2><div id="myDeliveries" class="space-y-3 text-sm"></div></section>
+</main>
+<script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
+<script src="/js/transitions.js"></script>
+<script src="/js/auth.js"></script>
+<script src="/js/rider.js"></script>
+</body></html>

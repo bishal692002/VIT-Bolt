@@ -5,15 +5,15 @@
   const statusTimeline = document.getElementById('statusTimeline');
   const deliveryPartner = document.getElementById('deliveryPartner');
 
-  const stages = ['preparing','out_for_delivery','delivered'];
+  const stages = ['placed','cooking','ready','out_for_delivery','delivered'];
 
   function renderStatus(current){
-    statusTimeline.innerHTML = stages.map(s=>{
+  statusTimeline.innerHTML = stages.map(s=>{
       const activeIndex = stages.indexOf(current);
       const idx = stages.indexOf(s);
       const active = idx <= activeIndex;
       return `<div class='flex flex-col items-center text-xs font-medium ${active? 'text-yellow-600':'text-gray-400'}'>
-        <div class='w-8 h-8 mb-1 rounded-full flex items-center justify-center border-2 ${active? 'border-yellow-500 bg-yellow-400 text-gray-900':'border-gray-300'}'>${idx+1}</div>
+    <div class='w-8 h-8 mb-1 rounded-full flex items-center justify-center border-2 ${active? 'border-yellow-500 bg-yellow-400 text-gray-900 animate-pulse':'border-gray-300'}'>${idx+1}</div>
         <span>${s.replace(/_/g,' ')}</span>
       </div>`;
     }).join('<div class="flex-1 h-0.5 bg-gray-300"></div>');

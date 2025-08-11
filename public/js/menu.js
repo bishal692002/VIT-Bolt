@@ -1,4 +1,6 @@
 (function(){
+  const socket = io({ auth: { token: localStorage.getItem('vitato_token') }});
+  socket.on('menu_updated', ()=> loadMenu());
   const grid = document.getElementById('menuGrid');
   const searchInput = document.getElementById('searchInput');
   const categoryFilter = document.getElementById('categoryFilter');
@@ -17,18 +19,21 @@
   const token = localStorage.getItem('vitato_token');
   const res = await fetch('/api/menu?'+params.toString(), { headers: token? { Authorization: 'Bearer '+token } : {} });
     const items = await res.json();
-    grid.innerHTML = items.map(item => `
-      <div class="bg-white border border-gray-100 rounded-lg shadow-sm flex flex-col overflow-hidden">
+    grid.innerHTML = items.map(item => {
+      const badge = item.inStock ? '<span class="text-green-600 text-xs font-medium flex items-center">✔ In stock</span>' : '<span class="text-red-500 text-xs font-medium flex items-center">✖ Out</span>';
+      return `
+      <div class="bg-white border border-gray-100 rounded-lg shadow-sm flex flex-col overflow-hidden transition transform hover:scale-[1.02]">
         <div class="h-40 bg-gray-100 flex items-center justify-center text-gray-400 text-sm">Image</div>
         <div class="p-4 flex flex-col flex-1">
           <h3 class="font-semibold mb-1">${item.name}</h3>
-          <p class="text-sm text-gray-500 mb-2">${item.vendor?.name||''}</p>
+          <p class="text-sm text-gray-500 mb-1">${item.vendor?.name||''}</p>
+          <div class="mb-2">${badge}</div>
           <div class="mt-auto flex items-center justify-between">
             <span class="font-medium">₹${item.price}</span>
-            <button data-id="${item._id}" class="addBtn text-sm bg-yellow-400 hover:bg-yellow-300 text-gray-900 px-3 py-1.5 rounded-md">Add</button>
+            <button data-id="${item._id}" class="addBtn text-sm bg-yellow-400 hover:bg-yellow-300 disabled:opacity-40 text-gray-900 px-3 py-1.5 rounded-md" ${item.inStock? '' : 'disabled'}>Add</button>
           </div>
         </div>
-      </div>`).join('');
+      </div>`; }).join('');
     grid.querySelectorAll('.addBtn').forEach(btn=>{
       btn.addEventListener('click', ()=>{
         const id = btn.getAttribute('data-id');

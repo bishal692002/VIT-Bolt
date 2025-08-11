@@ -11,8 +11,15 @@
   <style>
     body { font-family: 'Inter', sans-serif; background:#FAFAFA; color:#333333; }
     .btn-primary { background:#FFD54F; color:#333; }
-    .btn-primary:hover { background:#f7c63a; }
+  .btn-primary:hover { background:#f7c63a; }
+  body{opacity:1;transition:opacity .16s ease,transform .24s cubic-bezier(.4,0,.2,1);}body.page-enter{opacity:0;transform:translateY(4px);}body.page-enter-active{opacity:1;transform:translateY(0);}body.page-exit{opacity:0;transform:translateY(-4px);} 
+    .fade-in { opacity:0; animation:fadeIn .6s ease forwards; }
+    @keyframes fadeIn { to { opacity:1; } }
+    #lottieContainer svg { width:100%; height:auto; }
+    .hover-scale-soft { transition:transform .3s ease; }
+    .hover-scale-soft:hover { transform:scale(1.03); }
   </style>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/lottie-web/5.12.2/lottie.min.js" integrity="sha512-x4HcHcGgZl6JX6QHw1bXcF3GnG3DgO1eY1M0L1xVQF1VtJfT2R8bT7qV2Eo9P7mVn3g6C2vXlXcPbq4wV2c3bw==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 </head>
 <body class="flex flex-col min-h-full">
   <nav class="w-full bg-white border-b border-gray-200 px-4 py-3 flex items-center justify-between">
@@ -23,8 +30,19 @@
     </div>
   </nav>
   <main class="flex-1">
-    <section class="max-w-5xl mx-auto px-6 py-16 grid md:grid-cols-2 gap-10 items-center">
-      <div>
+    <section class="max-w-5xl mx-auto px-6 py-16 grid md:grid-cols-2 gap-10 items-start">
+      <div class="space-y-6 fade-in">
+        <div id="lottieContainer" class="bg-white border border-gray-100 rounded-xl p-4 shadow-sm hover-scale-soft">
+          <div id="lottieFallback" class="text-center text-sm text-gray-500">
+            <svg viewBox="0 0 200 120" class="mx-auto" width="200" height="120" aria-hidden="true">
+              <rect x="10" y="50" width="180" height="60" rx="12" fill="#FFD54F" opacity=".9" />
+              <circle cx="60" cy="85" r="18" fill="#333" opacity=".15" />
+              <circle cx="140" cy="85" r="18" fill="#333" opacity=".15" />
+              <text x="100" y="88" text-anchor="middle" font-size="20" fill="#333" font-family="Inter, sans-serif">VITato</text>
+            </svg>
+            <span class="block mt-2">Loading animation...</span>
+          </div>
+        </div>
         <h1 class="text-4xl font-bold mb-6 leading-tight">Order food in minutes – only for VIT Bhopal</h1>
         <p class="text-gray-600 mb-6">Fast, reliable, and campus-exclusive food delivery connecting you with on-campus vendors.</p>
         <div class="space-y-3 mb-8">
@@ -34,9 +52,9 @@
         </div>
         <a href="/menu.html" class="btn-primary inline-block px-6 py-3 rounded-md font-semibold shadow-sm">Browse Menu</a>
       </div>
-      <div class="bg-white rounded-xl p-8 shadow-sm border border-gray-100">
+      <div class="bg-white rounded-xl p-8 shadow-sm border border-gray-100 fade-in" style="animation-delay:.15s">
         <h2 class="text-xl font-semibold mb-4">Account Access</h2>
-        <form id="authForm" class="space-y-4">
+  <form id="authForm" class="space-y-4">
           <div id="nameField" class="hidden">
             <label class="block text-sm font-medium mb-1">Name</label>
             <input type="text" name="name" class="w-full border-gray-300 rounded-md" />
@@ -49,6 +67,14 @@
             <label class="block text-sm font-medium mb-1">Password</label>
             <input type="password" name="password" required minlength="6" class="w-full border-gray-300 rounded-md" />
           </div>
+          <div>
+            <label class="block text-sm font-medium mb-1">Role</label>
+            <select name="role" id="roleSelect" class="w-full border-gray-300 rounded-md text-sm">
+              <option value="student" selected>Student</option>
+              <option value="delivery">Delivery Rider</option>
+            </select>
+            <p class="text-[10px] text-gray-500 mt-1">Vendors are created by admin only.</p>
+          </div>
           <button class="w-full bg-yellow-400 hover:bg-yellow-300 text-gray-900 font-medium py-2 rounded-md" id="submitBtn">Login</button>
           <p class="text-xs text-center text-gray-500"> <span id="toggleMode" class="text-yellow-600 cursor-pointer">Need an account? Sign up</span></p>
           <p id="authMsg" class="text-xs text-center text-red-500"></p>
@@ -57,6 +83,8 @@
     </section>
   </main>
   <footer class="py-6 text-center text-sm text-gray-500">© 2025 VITato – Campus exclusive service (Prototype)</footer>
+  <script src="/js/transitions.js"></script>
+  <script src="/js/landing.js"></script>
   <script src="/js/auth.js"></script>
 </body>
 </html>

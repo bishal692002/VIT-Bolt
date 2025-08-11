@@ -6,7 +6,8 @@ const foodItemSchema = new mongoose.Schema({
   price: Number,
   category: String,
   image: String,
-  available: { type: Boolean, default: true }
+  available: { type: Boolean, default: true },
+  inStock: { type: Boolean, default: true }
 });
 
 export default mongoose.model('FoodItem', foodItemSchema);

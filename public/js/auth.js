@@ -37,15 +37,21 @@
     authForm.addEventListener('submit', async (e)=>{
       e.preventDefault(); authMsg.textContent='';
       const formData = new FormData(authForm);
-      const payload = Object.fromEntries(formData.entries());
+  const payload = Object.fromEntries(formData.entries());
+  if(mode==='login') delete payload.role; // role only matters on signup
       try {
         const res = await fetch(mode==='login'? '/auth/login':'/auth/signup', {
           method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(payload)
         });
         const data = await res.json();
         if(!res.ok){ authMsg.textContent = data.error || 'Error'; return; }
-        if(data.token){ setToken(data.token); }
-        window.location.href = '/menu.html';
+  if(data.token){ setToken(data.token); }
+  let target = data.redirect || '/menu.html';
+  try {
+    const last = localStorage.getItem('vitato_lastPage');
+    if(last && !['/','/index.html','/auth','/login','/signup'].includes(last)) target = last;
+  } catch {}
+  window.location.href = target;
       } catch { authMsg.textContent='Network error'; }
     });
   }

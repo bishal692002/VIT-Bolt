@@ -5,6 +5,7 @@
   const totalEl = document.getElementById('totalAmt');
   const summaryBox = document.getElementById('cartSummary');
   const checkoutBtn = document.getElementById('checkoutBtn');
+  const payBtn = document.getElementById('payBtn');
 
   function getCart(){ return JSON.parse(localStorage.getItem('vitato_cart')||'[]'); }
   function setCart(c){ localStorage.setItem('vitato_cart', JSON.stringify(c)); }
@@ -52,13 +53,55 @@
     });
   }
 
+  async function loadRazorpayKey(){
+    const r = await fetch('/api/payments/config');
+    return (await r.json()).key;
+  }
+
   checkoutBtn.addEventListener('click', async ()=>{
     const cart = getCart();
-  const token = localStorage.getItem('vitato_token');
-  const res = await fetch('/api/orders', { method:'POST', headers:{'Content-Type':'application/json', ...(token? { Authorization: 'Bearer '+token }: {})}, body: JSON.stringify({ items: cart }) });
-    const data = await res.json();
-    if(data._id){ localStorage.removeItem('vitato_cart'); window.location.href = '/track.html?order='+data._id; }
-    else alert(data.error||'Error');
+    if(!cart.length) return;
+    const token = localStorage.getItem('vitato_token');
+    if(!token){ alert('Login required'); return; }
+    checkoutBtn.disabled = true; checkoutBtn.textContent='Processing...';
+    try {
+      const res = await fetch('/api/payments/create-order', { method:'POST', headers:{'Content-Type':'application/json', Authorization:'Bearer '+token}, body: JSON.stringify({ items: cart }) });
+      const data = await res.json();
+      if(!res.ok){ alert(data.error||'Failed'); return; }
+      const key = await loadRazorpayKey();
+      if(!key){ alert('Payment config missing'); return; }
+      // Prepare Razorpay options
+      const options = {
+        key,
+        amount: data.amount,
+        currency: data.currency,
+        name: 'VITato',
+        description: 'Order Payment',
+        order_id: data.razorpayOrderId,
+        handler: async function (response){
+          try {
+            const vr = await fetch('/api/payments/verify', { method:'POST', headers:{'Content-Type':'application/json', Authorization:'Bearer '+token}, body: JSON.stringify({
+              razorpay_order_id: response.razorpay_order_id,
+              razorpay_payment_id: response.razorpay_payment_id,
+              razorpay_signature: response.razorpay_signature,
+              orderId: data.orderId
+            }) });
+            const vj = await vr.json();
+            if(vr.ok){
+              localStorage.removeItem('vitato_cart');
+              window.location.href = '/track.html?order='+data.orderId;
+            } else {
+              alert(vj.error||'Verification failed');
+            }
+          } catch { alert('Verification error'); }
+        },
+        theme:{ color: '#FFD54F' }
+      };
+      if(typeof Razorpay === 'undefined'){ alert('Razorpay SDK not loaded'); return; }
+      const rzp = new Razorpay(options);
+      rzp.open();
+    } catch { alert('Network error'); }
+    finally { checkoutBtn.disabled=false; checkoutBtn.textContent='Checkout'; }
   });
 
   loadDetails();
