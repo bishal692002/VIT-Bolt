@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Menu – VITato</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/tailwind.css" />
+  <style>body{font-family:'Inter',sans-serif;background:#FAFAFA;color:#333}</style>
+</head>
+<body class="min-h-full flex flex-col">
+  <nav class="w-full bg-white border-b border-gray-200 px-4 py-3 flex items-center justify-between">
+    <a href="/" class="font-bold text-lg">VITato</a>
+    <div class="flex items-center space-x-4">
+      <a href="/cart.html" class="relative">
+        <span class="font-medium">Cart</span>
+        <span id="cartCount" class="absolute -top-2 -right-3 text-xs bg-yellow-400 text-gray-800 rounded-full px-1.5 py-0.5">0</span>
+      </a>
+      <button id="logoutBtn" class="text-sm text-gray-600">Logout</button>
+    </div>
+  </nav>
+  <main class="flex-1 max-w-6xl mx-auto w-full px-5 py-8">
+    <div class="mb-6 grid md:grid-cols-3 gap-4 items-center">
+      <input id="searchInput" type="text" placeholder="Search food..." class="md:col-span-2 w-full rounded-md border-gray-300 focus:border-yellow-400 focus:ring-yellow-400" />
+      <select id="categoryFilter" class="w-full rounded-md border-gray-300 focus:border-yellow-400 focus:ring-yellow-400">
+        <option value="">All Categories</option>
+        <option>Meals</option>
+        <option>Snacks</option>
+        <option>Beverages</option>
+      </select>
+    </div>
+    <div id="menuGrid" class="grid sm:grid-cols-2 lg:grid-cols-3 gap-6"></div>
+  </main>
+  <footer class="py-6 text-center text-sm text-gray-500">© 2025 VITato</footer>
+  <script src="/js/auth.js"></script>
+  <script src="/js/menu.js"></script>
+</body>
+</html>

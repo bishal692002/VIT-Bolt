@@ -1,0 +1,29 @@
+{
+  "name": "vitato",
+  "version": "0.1.0",
+  "description": "Campus-exclusive food delivery platform for VIT Bhopal",
+  "main": "server.js",
+  "type": "module",
+  "scripts": {
+    "dev": "nodemon server.js",
+    "start": "node server.js",
+    "build:css": "tailwindcss -i ./public/css/tailwind.input.css -o ./public/css/tailwind.css --minify",
+    "seed": "node seed/seedData.js"
+  },
+  "dependencies": {
+  "bcrypt": "^5.1.1",
+  "dotenv": "^16.4.5",
+  "express": "^4.19.2",
+  "jsonwebtoken": "^9.0.2",
+  "mongoose": "^7.6.0",
+  "socket.io": "^4.7.5"
+  },
+  "devDependencies": {
+    "@tailwindcss/forms": "^0.5.7",
+    "@tailwindcss/typography": "^0.5.10",
+    "autoprefixer": "^10.4.20",
+    "nodemon": "^3.1.4",
+    "postcss": "^8.4.41",
+    "tailwindcss": "^3.4.9"
+  }
+}

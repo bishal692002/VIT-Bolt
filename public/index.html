@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>VITato – Campus Food Delivery</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/tailwind.css" />
+  <style>
+    body { font-family: 'Inter', sans-serif; background:#FAFAFA; color:#333333; }
+    .btn-primary { background:#FFD54F; color:#333; }
+    .btn-primary:hover { background:#f7c63a; }
+  </style>
+</head>
+<body class="flex flex-col min-h-full">
+  <nav class="w-full bg-white border-b border-gray-200 px-4 py-3 flex items-center justify-between">
+    <div class="font-bold text-lg">VITato</div>
+    <div id="nav-auth" class="space-x-3 hidden">
+      <span id="navUser" class="text-sm text-gray-600"></span>
+      <button id="logoutBtn" class="text-sm text-gray-600">Logout</button>
+    </div>
+  </nav>
+  <main class="flex-1">
+    <section class="max-w-5xl mx-auto px-6 py-16 grid md:grid-cols-2 gap-10 items-center">
+      <div>
+        <h1 class="text-4xl font-bold mb-6 leading-tight">Order food in minutes – only for VIT Bhopal</h1>
+        <p class="text-gray-600 mb-6">Fast, reliable, and campus-exclusive food delivery connecting you with on-campus vendors.</p>
+        <div class="space-y-3 mb-8">
+          <div class="flex items-start space-x-3"><div class="text-2xl">🍽️</div><p class="text-gray-700">Curated on-campus menu: meals, snacks, and beverages.</p></div>
+          <div class="flex items-start space-x-3"><div class="text-2xl">⚡</div><p class="text-gray-700">Quick delivery within campus perimeter.</p></div>
+          <div class="flex items-start space-x-3"><div class="text-2xl">🔒</div><p class="text-gray-700">Restricted to @vitbhopal.ac.in users only.</p></div>
+        </div>
+        <a href="/menu.html" class="btn-primary inline-block px-6 py-3 rounded-md font-semibold shadow-sm">Browse Menu</a>
+      </div>
+      <div class="bg-white rounded-xl p-8 shadow-sm border border-gray-100">
+        <h2 class="text-xl font-semibold mb-4">Account Access</h2>
+        <form id="authForm" class="space-y-4">
+          <div id="nameField" class="hidden">
+            <label class="block text-sm font-medium mb-1">Name</label>
+            <input type="text" name="name" class="w-full border-gray-300 rounded-md" />
+          </div>
+          <div>
+            <label class="block text-sm font-medium mb-1">Email</label>
+            <input type="email" name="email" required class="w-full border-gray-300 rounded-md" />
+          </div>
+          <div>
+            <label class="block text-sm font-medium mb-1">Password</label>
+            <input type="password" name="password" required minlength="6" class="w-full border-gray-300 rounded-md" />
+          </div>
+          <button class="w-full bg-yellow-400 hover:bg-yellow-300 text-gray-900 font-medium py-2 rounded-md" id="submitBtn">Login</button>
+          <p class="text-xs text-center text-gray-500"> <span id="toggleMode" class="text-yellow-600 cursor-pointer">Need an account? Sign up</span></p>
+          <p id="authMsg" class="text-xs text-center text-red-500"></p>
+        </form>
+      </div>
+    </section>
+  </main>
+  <footer class="py-6 text-center text-sm text-gray-500">© 2025 VITato – Campus exclusive service (Prototype)</footer>
+  <script src="/js/auth.js"></script>
+</body>
+</html>

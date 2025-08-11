@@ -1,0 +1,66 @@
+# Node dependencies
+node_modules/
+
+# Environment secrets
+.env
+.env.local
+.env.*.local
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Runtime data
+pids/
+*.pid
+*.seed
+*.pid.lock
+
+# Coverage
+coverage/
+
+# Build / cache
+.tmp/
+.temp/
+.cache/
+.dist/
+dist/
+build/
+.next/
+
+# Tailwind generated output (can rebuild). Comment out if you prefer to commit it.
+public/css/tailwind.css
+public/css/tailwind.css.map
+
+# OS / Editor
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/*
+!.vscode/settings.json
+
+# Optional lockfiles (keep the one you use)
+# yarn.lock
+# pnpm-lock.yaml
+# package-lock.json
+
+# Misc
+*.swp
+*.swo
+*.orig
+
+# Mongo local dumps / data
+_dump/
+dumps/
+
+# Socket.io transient files (if any)
+public/socket.io/
+
+# Archives
+*.tar
+*.tgz
+*.zip

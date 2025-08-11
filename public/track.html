@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Track Order – VITato</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/tailwind.css" />
+  <style>body{font-family:'Inter',sans-serif;background:#FAFAFA;color:#333}</style>
+</head>
+<body class="min-h-full flex flex-col">
+  <nav class="w-full bg-white border-b border-gray-200 px-4 py-3 flex items-center justify-between">
+    <a href="/menu.html" class="font-bold text-lg">VITato</a>
+    <div class="flex items-center space-x-4">
+      <a href="/menu.html" class="text-sm text-gray-600">Menu</a>
+      <button id="logoutBtn" class="text-sm text-gray-600">Logout</button>
+    </div>
+  </nav>
+  <main class="flex-1 max-w-2xl mx-auto w-full px-5 py-8">
+    <h1 class="text-2xl font-semibold mb-6">Order Tracking</h1>
+    <div id="orderInfo" class="space-y-4"></div>
+    <div id="statusTimeline" class="mt-8 flex items-center space-x-4"></div>
+    <div id="deliveryPartner" class="mt-8 p-4 bg-white rounded-md shadow-sm border border-gray-100 hidden"></div>
+  </main>
+  <footer class="py-6 text-center text-sm text-gray-500">© 2025 VITato</footer>
+  <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
+  <script src="/js/auth.js"></script>
+  <script src="/js/track.js"></script>
+</body>
+</html>
