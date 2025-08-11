@@ -15,22 +15,9 @@ router.get('/menu', async (req, res) => {
   res.json(items);
 });
 
-router.post('/orders', ensureAuth, async (req, res) => {
-  const { items } = req.body; // items: [{foodId, quantity}]
-  if (!Array.isArray(items) || !items.length) return res.status(400).json({ error: 'No items' });
-  const foodDocs = await FoodItem.find({ _id: { $in: items.map(i => i.foodId) } });
-  const orderItems = items.map(i => {
-    const f = foodDocs.find(fd => fd.id === i.foodId);
-    return { food: f._id, quantity: i.quantity, price: f.price };
-  });
-  const subtotal = orderItems.reduce((s,i)=> s + i.price * i.quantity, 0);
-  const deliveryFee = subtotal < 200 ? 15 : 10; // simple rule
-  const total = subtotal + deliveryFee;
-  const order = await Order.create({ user: req.user.id, items: orderItems, total, deliveryFee });
-  const io = req.app.get('io');
-  io.to(req.user.id.toString()).emit('order_created', { orderId: order._id });
-  io.emit('orders_updated');
-  res.json(order);
+// Direct order creation disabled in prepaid flow; use /api/payments/create-order
+router.post('/orders', ensureAuth, (req, res) => {
+  return res.status(410).json({ error: 'Deprecated endpoint. Use /api/payments/create-order.' });
 });
 
 router.get('/orders/:id', ensureAuth, async (req, res) => {
@@ -95,7 +82,12 @@ router.get('/vendor/orders', ensureAuth, requireRole('vendor'), async (req, res)
   if(!req.user.vendor) return res.status(400).json({ error: 'Vendor context missing' });
   const vendorFoodIds = await FoodItem.find({ vendor: req.user.vendor }).distinct('_id');
   if(!vendorFoodIds.length) return res.json([]);
-  const orders = await Order.find({ 'items.food': { $in: vendorFoodIds } }).sort({ createdAt: -1 }).limit(50);
+  const orders = await Order.find({ 'items.food': { $in: vendorFoodIds } })
+    .sort({ createdAt: -1 })
+    .limit(100)
+    .populate({ path: 'items.food', select: 'name price vendor', populate: { path: 'vendor', select: 'name' } })
+    .populate({ path: 'user', select: 'name phone' })
+    .populate({ path: 'deliveryPartner', select: 'name phone' });
   res.json(orders);
 });
 
@@ -110,6 +102,8 @@ router.post('/vendor/orders/:id/status', ensureAuth, requireRole('vendor'), asyn
   const vendorFoodIds = await FoodItem.find({ vendor: req.user.vendor }).distinct('_id');
   const containsVendorItem = order.items.some(i => vendorFoodIds.find(id => id.toString() === i.food.toString()));
   if(!containsVendorItem) return res.status(403).json({ error: 'Forbidden' });
+  // Require payment before progressing beyond placed
+  if(order.payment && order.payment.status !== 'paid') return res.status(409).json({ error: 'Payment pending' });
   // Progression rules
   if(status === 'cooking' && order.status !== 'placed') return res.status(409).json({ error: 'Cannot move to cooking' });
   if(status === 'ready' && order.status !== 'cooking') return res.status(409).json({ error: 'Cannot move to ready' });
@@ -130,7 +124,7 @@ router.get('/orders', ensureAuth, async (req, res) => {
 
 // Rider endpoints
 router.get('/rider/orders/available', ensureAuth, requireRole('delivery'), async (req, res) => {
-  const orders = await Order.find({ status: { $in: ['ready','out_for_delivery'] }, deliveryPartner: { $exists: false } }).sort({ createdAt: 1 }).limit(30);
+  const orders = await Order.find({ status: 'ready', deliveryPartner: { $exists: false }, declinedRiders: { $ne: req.user.id } }).sort({ createdAt: 1 }).limit(30);
   res.json(orders);
 });
 router.post('/rider/orders/:id/claim', ensureAuth, requireRole('delivery'), async (req, res) => {
@@ -138,6 +132,7 @@ router.post('/rider/orders/:id/claim', ensureAuth, requireRole('delivery'), asyn
   if(!order) return res.status(404).json({ error: 'Unavailable' });
   const io = req.app.get('io');
   io.emit('orders_updated');
+  io.emit('order_claimed', { orderId: order._id.toString(), riderId: req.user.id });
   io.to(order.user.toString()).emit('order_status', { orderId: order._id.toString(), status: order.status });
   res.json(order);
 });
@@ -147,6 +142,51 @@ router.post('/rider/orders/:id/delivered', ensureAuth, requireRole('delivery'), 
   const io = req.app.get('io');
   io.emit('orders_updated');
   io.to(order.user.toString()).emit('order_status', { orderId: order._id.toString(), status: order.status });
+  res.json(order);
+});
+
+// Rider decline endpoint: adds rider to declinedRiders so they no longer see it
+router.post('/rider/orders/:id/decline', ensureAuth, requireRole('delivery'), async (req, res) => {
+  const order = await Order.findOneAndUpdate({ _id: req.params.id, deliveryPartner: { $exists: false } }, { $addToSet: { declinedRiders: req.user.id } }, { new: true });
+  if(!order) return res.status(404).json({ error: 'Not found or already assigned' });
+  res.json({ ok: true });
+});
+
+// Rider assigned (active) orders
+router.get('/rider/orders/assigned', ensureAuth, requireRole('delivery'), async (req, res) => {
+  const orders = await Order.find({ deliveryPartner: req.user.id, status: { $ne: 'delivered' } })
+    .sort({ createdAt: -1 })
+    .limit(50)
+    .populate({ path: 'items.food', select: 'name price vendor', populate: { path: 'vendor', select: 'name' } })
+    .populate({ path: 'user', select: 'name phone' });
+  res.json(orders);
+});
+// Rider delivered history
+router.get('/rider/orders/history', ensureAuth, requireRole('delivery'), async (req, res) => {
+  const orders = await Order.find({ deliveryPartner: req.user.id, status: 'delivered' })
+    .sort({ updatedAt: -1 })
+    .limit(50)
+    .populate({ path: 'items.food', select: 'name price vendor', populate: { path: 'vendor', select: 'name' } })
+    .populate({ path: 'user', select: 'name phone' });
+  res.json(orders);
+});
+
+// Unified order detail endpoint for student(owner) / vendor (if contains vendor item) / rider (if assigned)
+router.get('/order/:id', ensureAuth, async (req, res) => {
+  const order = await Order.findById(req.params.id)
+    .populate({ path: 'items.food', select: 'name price vendor', populate: { path: 'vendor', select: 'name' } })
+    .populate({ path: 'user', select: 'name phone' })
+    .populate({ path: 'deliveryPartner', select: 'name phone' });
+  if(!order) return res.status(404).json({ error: 'Not found' });
+  const userId = req.user.id.toString();
+  let allowed = false;
+  if(order.user.toString() === userId) allowed = true; // student owner
+  if(!allowed && req.user.role === 'delivery' && order.deliveryPartner && order.deliveryPartner._id.toString() === userId) allowed = true;
+  if(!allowed && req.user.role === 'vendor' && req.user.vendor){
+    const vendorFoodIds = await FoodItem.find({ vendor: req.user.vendor }).distinct('_id');
+    allowed = order.items.some(i => vendorFoodIds.find(id => id.toString() === i.food._id.toString()));
+  }
+  if(!allowed) return res.status(403).json({ error: 'Forbidden' });
   res.json(order);
 });
 

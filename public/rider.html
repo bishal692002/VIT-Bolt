@@ -1,9 +1,36 @@
 <!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Rider Dashboard - VITato</title><link rel="stylesheet" href="/css/tailwind.css"><style>body{font-family:Inter,system-ui,sans-serif;background:#FAFAFA;color:#333}.gradient-header{background:linear-gradient(90deg,#FFD54F,#f7c63a);} .badge{padding:2px 6px;border-radius:12px;font-size:10px}body{opacity:1;transition:opacity .16s ease,transform .24s cubic-bezier(.4,0,.2,1);}body.page-enter{opacity:0;transform:translateY(4px);}body.page-enter-active{opacity:1;transform:translateY(0);}body.page-exit{opacity:0;transform:translateY(-4px);} </style></head><body class="min-h-screen flex flex-col">
 <header class="gradient-header text-gray-900 py-4 px-6 flex justify-between items-center sticky top-0 shadow-sm"><h1 class="font-semibold">Delivery Rider</h1><nav class="flex items-center space-x-4 text-sm"><a href="/rider.html" class="underline">Dashboard</a><button id="logoutBtn">Logout</button></nav></header>
-<main class="flex-1 px-6 py-6 max-w-5xl mx-auto">
-  <section class="mb-8"><h2 class="text-lg font-semibold mb-3">Available Orders</h2><div id="availableOrders" class="space-y-3 text-sm"></div></section>
-  <section><h2 class="text-lg font-semibold mb-3">My Deliveries</h2><div id="myDeliveries" class="space-y-3 text-sm"></div></section>
+<main class="flex-1 px-6 py-6 max-w-6xl mx-auto">
+  <div class="mb-6 flex flex-wrap gap-2" id="riderTabs">
+  <button data-rtab="orders" class="rtabBtn bg-yellow-400 text-gray-900 px-4 py-2 rounded-md text-sm font-medium shadow">Orders</button>
+  <button data-rtab="stats" class="rtabBtn bg-white border border-gray-300 px-4 py-2 rounded-md text-sm">Stats</button>
+  <button data-rtab="history" class="rtabBtn bg-white border border-gray-300 px-4 py-2 rounded-md text-sm">History</button>
+  </div>
+  <div id="riderPanels" class="space-y-10">
+    <section data-rpanel="orders" class="rpanel">
+      <h2 class="text-lg font-semibold mb-3">Available Orders</h2>
+      <div id="availableOrders" class="space-y-3 text-sm mb-8"></div>
+      <h2 class="text-lg font-semibold mb-3">My Active Deliveries</h2>
+      <div id="myDeliveries" class="space-y-3 text-sm"></div>
+    </section>
+    <section data-rpanel="stats" class="rpanel hidden">
+      <h2 class="text-lg font-semibold mb-4">Today Stats</h2>
+      <div id="riderStats" class="grid md:grid-cols-4 gap-4"></div>
+    </section>
+    <section data-rpanel="history" class="rpanel hidden">
+      <h2 class="text-lg font-semibold mb-4">Delivered (Recent)</h2>
+      <div id="riderHistory" class="space-y-3 text-sm"></div>
+    </section>
+  </div>
 </main>
+<!-- Detail Modal -->
+<div id="riderOrderModal" class="fixed inset-0 bg-black/30 backdrop-blur-sm hidden items-center justify-center p-4">
+  <div class="bg-white rounded-lg shadow-lg w-full max-w-md p-6 relative text-sm">
+    <button id="riderOrderModalClose" class="absolute top-2 right-2 text-gray-500 hover:text-gray-700">✕</button>
+    <h3 class="text-lg font-semibold mb-3">Order Detail</h3>
+    <div id="riderOrderDetail" class="space-y-3"></div>
+  </div>
+</div>
 <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
 <script src="/js/transitions.js"></script>
 <script src="/js/auth.js"></script>

@@ -58,6 +58,18 @@
     return (await r.json()).key;
   }
 
+  function showTempMessage(msg, cls){
+    let el = document.getElementById('cartMsg');
+    if(!el){
+      el = document.createElement('div');
+      el.id='cartMsg';
+      el.className='mt-4 text-sm';
+      summaryBox.appendChild(el);
+    }
+    el.textContent = msg;
+    el.className = 'mt-4 text-sm '+(cls||'text-gray-600');
+  }
+
   checkoutBtn.addEventListener('click', async ()=>{
     const cart = getCart();
     if(!cart.length) return;
@@ -99,7 +111,16 @@
       };
       if(typeof Razorpay === 'undefined'){ alert('Razorpay SDK not loaded'); return; }
       const rzp = new Razorpay(options);
+      rzp.on('payment.failed', function (resp){
+        showTempMessage('Payment failed or cancelled. You can retry.', 'text-red-600');
+      });
       rzp.open();
+      // Listen for async success via socket if user closes popup after paying
+      try {
+        const socket = io();
+        socket.on('order_paid', payload => { if(payload.orderId === data.orderId){ localStorage.removeItem('vitato_cart'); window.location.href='/track.html?order='+data.orderId; }});
+        socket.on('order_payment_failed', payload => { if(payload.orderId === data.orderId){ showTempMessage('Payment failed. Please retry.', 'text-red-600'); }});
+      } catch {}
     } catch { alert('Network error'); }
     finally { checkoutBtn.disabled=false; checkoutBtn.textContent='Checkout'; }
   });

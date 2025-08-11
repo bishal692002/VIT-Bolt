@@ -10,6 +10,15 @@
   const modalTitle = document.getElementById('modalTitle');
   const deleteBtn = document.getElementById('deleteItemBtn');
   const itemFormMsg = document.getElementById('itemFormMsg');
+  const vtabButtons = document.querySelectorAll('.vtabBtn');
+  const vpanels = document.querySelectorAll('.vpanel');
+  const summaryEl = document.getElementById('vendorSummary');
+
+  function switchVendorTab(name){
+    vtabButtons.forEach(b=>{ const on = b.getAttribute('data-vtab')===name; b.classList.toggle('bg-yellow-400', on); b.classList.toggle('text-gray-900', on); b.classList.toggle('border', !on); });
+    vpanels.forEach(p=> p.classList.toggle('hidden', p.getAttribute('data-vpanel')!==name));
+  }
+  vtabButtons.forEach(b=> b.addEventListener('click', ()=> switchVendorTab(b.getAttribute('data-vtab'))));
 
   async function fetchMenu(){
     const res = await fetch('/api/vendor/items', { headers:{ Authorization: 'Bearer '+token }});
@@ -32,30 +41,58 @@
     const res = await fetch('/api/vendor/orders', { headers:{ Authorization: 'Bearer '+token }});
     if(!res.ok){ ordersContainer.innerHTML = '<p class="text-xs text-gray-500">No orders yet</p>'; return; }
     const orders = await res.json();
+    if(summaryEl){
+      const todayStart = new Date(); todayStart.setHours(0,0,0,0);
+      const today = orders.filter(o=> new Date(o.createdAt) >= todayStart);
+      const totalOrders = today.length;
+      const revenue = today.reduce((s,o)=> s + (o.payment?.status==='paid'? o.total:0),0);
+      const preparing = today.filter(o=> o.status==='cooking').length;
+      const ready = today.filter(o=> o.status==='ready').length;
+      summaryEl.innerHTML = [
+        { label:'Orders', value: totalOrders },
+        { label:'Revenue (₹)', value: revenue },
+        { label:'Cooking', value: preparing },
+        { label:'Ready', value: ready }
+      ].map(c=> `<div class='bg-white border border-gray-100 rounded-md p-4 text-center'>
+          <div class='text-xl font-semibold'>${c.value}</div>
+          <div class='text-xs text-gray-500 mt-1 uppercase tracking-wide'>${c.label}</div>
+        </div>`).join('');
+    }
     const nextStatuses = {};
-    ordersContainer.innerHTML = orders.map(o=> {
+    const activeOrders = orders.filter(o=> o.status !== 'delivered');
+    const delivered = orders.filter(o=> o.status === 'delivered');
+    ordersContainer.innerHTML = activeOrders.map(o=> {
       nextStatuses[o._id] = o.status;
       const changed = !prevStatuses[o._id] || prevStatuses[o._id] !== o.status;
       const itemsCount = o.items?.length || 0;
       const totalQty = o.items?.reduce((s,it)=> s + (it.quantity||0),0) || 0;
       const badgeColor = o.status === 'ready' ? 'bg-green-100 text-green-700' : o.status === 'cooking' ? 'bg-yellow-100 text-yellow-700' : 'bg-gray-100';
+      const paid = o.payment?.status === 'paid';
       return `<div class='orderCard border p-2 rounded-md bg-white space-y-1 transition-all ${changed? 'ring-2 ring-yellow-400':''}' data-oid='${o._id}'>
         <div class='flex justify-between items-center'>
-          <span class='font-medium'>#${o._id.substring(0,6)}</span>
+          <span class='font-medium underline cursor-pointer' data-detail='${o._id}'>#${o._id.substring(0,6)}</span>
           <span class='statusBadge text-xs px-2 py-0.5 rounded-full ${badgeColor}'>${o.status}</span>
         </div>
+        <div class='text-[10px] ${paid? 'text-green-600':'text-red-500'}'>${paid? 'Paid':'Payment Pending'}</div>
         <div class='text-[10px] text-gray-600'>Items: ${itemsCount} • Qty: ${totalQty}</div>
         <div class='actions flex flex-wrap gap-2 text-[10px]'>
-          ${o.status==='placed'? '<button class=\"orderAction bg-yellow-400 text-gray-900 px-2 py-1 rounded\" data-next=\"cooking\">Start Cooking</button>':''}
-          ${o.status==='cooking'? '<button class=\"orderAction bg-green-500 text-white px-2 py-1 rounded\" data-next=\"ready\">Mark Ready</button>':''}
+          ${o.status==='placed' && paid? '<button class="orderAction bg-yellow-400 text-gray-900 px-2 py-1 rounded" data-next="cooking">Start Cooking</button>':''}
+          ${o.status==='cooking'? '<button class="orderAction bg-green-500 text-white px-2 py-1 rounded" data-next="ready">Mark Ready</button>':''}
         </div>
       </div>`;
     }).join('');
-    // Remove highlight after delay
+    if(historyContainer){
+      historyContainer.innerHTML = delivered.slice(0,50).map(o=> `<div class='border p-2 rounded-md bg-white flex justify-between items-center text-xs' data-oid='${o._id}'>
+        <span class='underline cursor-pointer' data-detail='${o._id}'>#${o._id.substring(0,6)}</span>
+        <span class='text-green-600'>Delivered</span>
+      </div>`).join('') || '<p class="text-xs text-gray-500">None</p>';
+    }
     setTimeout(()=>{
       ordersContainer.querySelectorAll('.orderCard.ring-2').forEach(c=> c.classList.remove('ring-2','ring-yellow-400'));
     }, 1600);
     prevStatuses = nextStatuses;
+    ordersContainer.querySelectorAll('[data-detail]')?.forEach(el=> el.onclick = ()=> openOrderDetail(el.getAttribute('data-detail')));
+    historyContainer?.querySelectorAll('[data-detail]')?.forEach(el=> el.onclick = ()=> openOrderDetail(el.getAttribute('data-detail')));
   }
 
   function openModal(edit=false, data=null){
@@ -161,6 +198,38 @@
 
   socket.on('menu_updated', fetchMenu);
   socket.on('orders_updated', fetchOrders); // real-time refresh
+  socket.on('new_order', ()=>{
+    // Light alert: fetch and flash overview tab
+    fetchOrders();
+    const header = document.querySelector('[data-vtab="overview"]');
+    if(header){ header.classList.add('ring-2','ring-green-500'); setTimeout(()=> header.classList.remove('ring-2','ring-green-500'), 1800); }
+  });
+  const orderModal = document.getElementById('vendorOrderModal');
+  const orderModalClose = document.getElementById('vendorOrderModalClose');
+  const orderModalDetail = document.getElementById('vendorOrderDetail');
+  function closeOrderModal(){ orderModal.classList.add('hidden'); orderModal.classList.remove('flex'); }
+  orderModalClose?.addEventListener('click', closeOrderModal);
+  orderModal?.addEventListener('click', e=>{ if(e.target===orderModal) closeOrderModal(); });
+  async function openOrderDetail(id){
+    try {
+      const res = await fetch('/api/order/'+id, { headers:{ Authorization:'Bearer '+token }});
+      if(!res.ok) return;
+      const o = await res.json();
+      const items = (o.items||[]).map(i=> `<li class='flex justify-between'><span>${i.food?.name||'Item'}</span><span class='text-[10px]'>x${i.quantity}</span></li>`).join('');
+      orderModalDetail.innerHTML = `
+        <div class='flex justify-between text-xs'><span>ID</span><span>#${o._id.substring(0,8)}</span></div>
+        <div class='text-xs'><span class='font-medium'>Status:</span> ${o.status}</div>
+        <div class='text-xs'><span class='font-medium'>Student:</span> ${o.user?.name||''} ${o.user?.phone? '• '+o.user.phone:''}</div>
+        <div class='text-xs'><span class='font-medium'>Delivery:</span> ${o.deliveryPartner? (o.deliveryPartner.name + (o.deliveryPartner.phone? ' • '+o.deliveryPartner.phone:'')) : 'Unassigned'}</div>
+        <div class='text-xs'><span class='font-medium'>Address:</span> ${(o.deliveryAddress?.line1||'') + (o.deliveryAddress?.line2? ', '+o.deliveryAddress.line2:'')}</div>
+        <div class='text-xs'><span class='font-medium'>Items:</span></div>
+        <ul class='divide-y text-xs'>${items}</ul>
+        <div class='flex justify-between text-xs font-medium pt-2'><span>Total</span><span>₹${o.total}</span></div>
+      `;
+      orderModal.classList.remove('hidden'); orderModal.classList.add('flex');
+    } catch {}
+  }
   fetchMenu();
   fetchOrders();
+  switchVendorTab('overview');
 })();

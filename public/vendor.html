@@ -1,14 +1,35 @@
 <!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Vendor Dashboard - VITato</title><link rel="stylesheet" href="/css/tailwind.css"><style>body{font-family:Inter,system-ui,sans-serif;background:#FAFAFA;color:#333}.gradient-header{background:linear-gradient(90deg,#FFD54F,#f7c63a);} .card{background:#fff;border:1px solid #eee;border-radius:10px;padding:16px;}body{opacity:1;transition:opacity .16s ease,transform .24s cubic-bezier(.4,0,.2,1);}body.page-enter{opacity:0;transform:translateY(4px);}body.page-enter-active{opacity:1;transform:translateY(0);}body.page-exit{opacity:0;transform:translateY(-4px);} </style></head><body class="min-h-screen flex flex-col">
 <header class="gradient-header text-gray-900 py-4 px-6 flex justify-between items-center sticky top-0 shadow-sm"><h1 class="font-semibold">Vendor Panel</h1><nav class="flex items-center space-x-4 text-sm"><a href="/vendor.html" class="underline">Dashboard</a><button id="logoutBtn">Logout</button></nav></header>
-<main class="flex-1 px-6 py-6 max-w-6xl mx-auto grid gap-6 md:grid-cols-3">
-  <section class="md:col-span-2 space-y-4" id="menuManager">
-    <div class="flex justify-between items-center"><h2 class="font-semibold">Menu Items</h2><button id="addItemBtn" class="bg-yellow-400 hover:bg-yellow-300 text-gray-900 text-sm px-3 py-1.5 rounded-md">Add Item</button></div>
-    <div id="vendorItems" class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3"></div>
-  </section>
-  <section class="space-y-4" id="ordersPanel">
-    <h2 class="font-semibold">Orders</h2>
-    <div id="vendorOrders" class="space-y-3 text-sm"></div>
-  </section>
+<main class="flex-1 px-6 py-6 max-w-7xl mx-auto">
+  <div class="mb-6 flex flex-wrap gap-2" id="vendorTabs">
+    <button data-vtab="overview" class="vtabBtn bg-yellow-400 text-gray-900 px-4 py-2 rounded-md text-sm font-medium shadow">Overview</button>
+    <button data-vtab="menu" class="vtabBtn bg-white border border-gray-300 px-4 py-2 rounded-md text-sm">Menu</button>
+    <button data-vtab="orders" class="vtabBtn bg-white border border-gray-300 px-4 py-2 rounded-md text-sm">Orders</button>
+  <button data-vtab="history" class="vtabBtn bg-white border border-gray-300 px-4 py-2 rounded-md text-sm">History</button>
+    <button data-vtab="settings" class="vtabBtn bg-white border border-gray-300 px-4 py-2 rounded-md text-sm">Settings</button>
+  </div>
+  <div id="vendorPanels" class="space-y-10">
+    <section data-vpanel="overview" class="vpanel">
+      <h2 class="text-lg font-semibold mb-4">Today Summary</h2>
+      <div id="vendorSummary" class="grid md:grid-cols-4 gap-4"></div>
+    </section>
+    <section data-vpanel="menu" class="vpanel hidden">
+      <div class="flex justify-between items-center mb-4"><h2 class="text-lg font-semibold">Menu Items</h2><button id="addItemBtn" class="bg-yellow-400 hover:bg-yellow-300 text-gray-900 text-sm px-3 py-1.5 rounded-md">Add Item</button></div>
+      <div id="vendorItems" class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3"></div>
+    </section>
+    <section data-vpanel="orders" class="vpanel hidden">
+      <h2 class="text-lg font-semibold mb-4">Orders</h2>
+      <div id="vendorOrders" class="space-y-3 text-sm"></div>
+    </section>
+    <section data-vpanel="history" class="vpanel hidden">
+      <h2 class="text-lg font-semibold mb-4">Delivered (Recent)</h2>
+      <div id="vendorHistory" class="space-y-3 text-sm"></div>
+    </section>
+    <section data-vpanel="settings" class="vpanel hidden">
+      <h2 class="text-lg font-semibold mb-4">Settings</h2>
+      <p class="text-xs text-gray-600">(Future) Manage vendor details.</p>
+    </section>
+  </div>
 </main>
 <!-- Modal -->
 <div id="itemModal" class="fixed inset-0 bg-black/30 backdrop-blur-sm hidden items-center justify-center p-4">
@@ -51,4 +72,11 @@
 <script src="/js/transitions.js"></script>
 <script src="/js/auth.js"></script>
 <script src="/js/vendor.js"></script>
+<div id="vendorOrderModal" class="fixed inset-0 bg-black/30 backdrop-blur-sm hidden items-center justify-center p-4">
+  <div class="bg-white rounded-lg shadow-lg w-full max-w-md p-6 relative text-sm">
+    <button id="vendorOrderModalClose" class="absolute top-2 right-2 text-gray-500 hover:text-gray-700">✕</button>
+    <h3 class="text-lg font-semibold mb-3">Order Detail</h3>
+    <div id="vendorOrderDetail" class="space-y-3"></div>
+  </div>
+</div>
 </body></html>

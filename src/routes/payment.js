@@ -1,4 +1,4 @@
-import { Router } from 'express';
+import express, { Router } from 'express';
 import Razorpay from 'razorpay';
 import crypto from 'crypto';
 import FoodItem from '../models/FoodItem.js';
@@ -22,7 +22,7 @@ router.get('/config', (req, res) => {
 // Create an order (expects items: [{foodId, quantity}])
 router.post('/create-order', ensureAuth, async (req, res) => {
   try {
-    const { items } = req.body;
+  const { items, address } = req.body;
     if(!Array.isArray(items) || !items.length) return res.status(400).json({ error: 'No items' });
     const foodDocs = await FoodItem.find({ _id: { $in: items.map(i=>i.foodId) } });
     if(!foodDocs.length) return res.status(400).json({ error: 'Invalid items' });
@@ -43,7 +43,13 @@ router.post('/create-order', ensureAuth, async (req, res) => {
       notes: { userId: req.user.id.toString() }
     });
 
-    const order = await Order.create({ user: req.user.id, items: orderItems, total, deliveryFee, payment: { razorpayOrderId: rzpOrder.id, status: 'pending' } });
+    // Choose address snapshot (if provided), else fallback to first user address (not implemented fetch here) or minimal placeholder
+    let deliveryAddress = null;
+    if(address && typeof address === 'object'){
+      const { label, line1, line2, landmark } = address;
+      deliveryAddress = { label, line1, line2, landmark };
+    }
+    const order = await Order.create({ user: req.user.id, items: orderItems, total, deliveryFee, deliveryAddress, payment: { razorpayOrderId: rzpOrder.id, status: 'pending' } });
     req.app.get('io').to(req.user.id.toString()).emit('order_created', { orderId: order._id });
     res.json({ orderId: order._id, razorpayOrderId: rzpOrder.id, amount: total * 100, currency: 'INR' });
   } catch (e) {
@@ -72,4 +78,45 @@ router.post('/verify', ensureAuth, async (req, res) => {
   }
 });
 
+// Razorpay Webhook (asynchronous payment updates)
+// NOTE: Must configure server to not parse JSON before signature verification. We'll manually parse here.
+router.post('/webhook', express.raw({ type: 'application/json' }), async (req, res) => {
+  try {
+    const secret = process.env.RAZORPAY_WEBHOOK_SECRET;
+    if(!secret) return res.status(500).send('Webhook secret missing');
+    const signature = req.headers['x-razorpay-signature'];
+    const bodyBuf = req.body; // Buffer
+    const expected = crypto.createHmac('sha256', secret).update(bodyBuf).digest('hex');
+    if(expected !== signature){ return res.status(400).send('Invalid signature'); }
+    const payload = JSON.parse(bodyBuf.toString());
+    const event = payload.event;
+    // Extract order/payment ids
+    const rzpOrderId = payload.payload?.order?.entity?.id || payload.payload?.payment?.entity?.order_id;
+    const rzpPaymentId = payload.payload?.payment?.entity?.id;
+    if(rzpOrderId){
+      const order = await Order.findOne({ 'payment.razorpayOrderId': rzpOrderId });
+      if(order){
+        if(event === 'payment.captured' || event === 'order.paid'){
+          order.payment.status = 'paid';
+          if(rzpPaymentId) order.payment.razorpayPaymentId = rzpPaymentId;
+          await order.save();
+          const io = req.app.get('io');
+          io?.to(order.user.toString()).emit('order_paid', { orderId: order._id.toString() });
+          // Broadcast a vendor/rider facing event for new order availability
+          io?.emit('new_order', { orderId: order._id.toString() });
+        } else if(event === 'payment.failed'){
+          order.payment.status = 'failed';
+          await order.save();
+          const io = req.app.get('io');
+          io?.to(order.user.toString()).emit('order_payment_failed', { orderId: order._id.toString() });
+        }
+      }
+    }
+    res.json({ received: true });
+  } catch (e) {
+    res.status(500).send('Webhook error');
+  }
+});
+
 export default router;
+// Webhook must be appended after exports? Keep above. Add webhook route earlier.

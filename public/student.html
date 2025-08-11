@@ -1,12 +1,36 @@
 <!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Student Dashboard - VITato</title><link rel="stylesheet" href="/css/tailwind.css"><style>body{font-family:Inter,system-ui,sans-serif;background:#FAFAFA;color:#333} .gradient-header{background:linear-gradient(90deg,#FFD54F,#f7c63a);} .status-badge{font-size:10px;padding:2px 6px;border-radius:9999px}body{opacity:1;transition:opacity .16s ease,transform .24s cubic-bezier(.4,0,.2,1);}body.page-enter{opacity:0;transform:translateY(4px);}body.page-enter-active{opacity:1;transform:translateY(0);}body.page-exit{opacity:0;transform:translateY(-4px);} </style></head><body class="min-h-screen flex flex-col">
 <header class="gradient-header text-gray-900 py-4 px-6 flex justify-between items-center sticky top-0 shadow-sm"><h1 class="font-semibold">VITato Student</h1><nav class="flex items-center space-x-4 text-sm"><a href="/student.html" class="underline">Dashboard</a><a href="/menu.html">Menu</a><a href="/track.html">Track</a><button id="logoutBtn" class="text-gray-800">Logout</button></nav></header>
 <main class="flex-1 px-6 py-6 max-w-6xl mx-auto">
-  <section class="mb-8"><h2 class="text-lg font-semibold mb-3">Recent Orders</h2><div id="recentOrders" class="grid gap-4 sm:grid-cols-2 md:grid-cols-3"></div></section>
-  <section class="mb-8"><h2 class="text-lg font-semibold mb-3">Order Progress</h2><div id="activeOrder" class="text-sm text-gray-600">No active order.</div></section>
-  <section><h2 class="text-lg font-semibold mb-3">Browse Menu</h2><iframe src="/menu.html" class="w-full h-[600px] rounded-md border border-gray-200 bg-white"></iframe></section>
+  <div class="mb-6 flex flex-wrap gap-2" id="studentTabs">
+    <button data-tab="overview" class="tabBtn bg-yellow-400 text-gray-900 px-4 py-2 rounded-md text-sm font-medium shadow">Overview</button>
+    <button data-tab="history" class="tabBtn bg-white border border-gray-300 px-4 py-2 rounded-md text-sm">Order History</button>
+    <button data-tab="addresses" class="tabBtn bg-white border border-gray-300 px-4 py-2 rounded-md text-sm">Saved Addresses</button>
+    <button data-tab="menu" class="tabBtn bg-white border border-gray-300 px-4 py-2 rounded-md text-sm">Menu</button>
+  </div>
+  <div id="tabContent" class="space-y-10">
+    <section data-panel="overview" class="panel">
+      <h2 class="text-lg font-semibold mb-3">Active Order</h2>
+      <div id="activeOrder" class="text-sm text-gray-600">No active order.</div>
+      <h3 class="text-lg font-semibold mt-8 mb-3">Recent Orders</h3>
+      <div id="recentOrders" class="grid gap-4 sm:grid-cols-2 md:grid-cols-3"></div>
+    </section>
+    <section data-panel="history" class="panel hidden">
+      <h2 class="text-lg font-semibold mb-4">Order History</h2>
+      <div id="orderHistory" class="space-y-3"></div>
+    </section>
+    <section data-panel="addresses" class="panel hidden">
+      <div class="flex items-center justify-between mb-4"><h2 class="text-lg font-semibold">Saved Addresses</h2><button id="addAddressBtn" class="text-xs bg-yellow-400 hover:bg-yellow-300 text-gray-900 px-3 py-1.5 rounded">Add</button></div>
+      <div id="addressList" class="grid md:grid-cols-2 gap-4"></div>
+      <div id="addressEmpty" class="text-xs text-gray-500 hidden">No addresses added.</div>
+    </section>
+    <section data-panel="menu" class="panel hidden">
+      <h2 class="text-lg font-semibold mb-3">Browse Menu</h2>
+      <iframe src="/menu.html" class="w-full h-[600px] rounded-md border border-gray-200 bg-white"></iframe>
+    </section>
+  </div>
 </main>
 <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
 <script src="/js/transitions.js"></script>
 <script src="/js/auth.js"></script>
-<script>/* Fetch recent orders placeholder */</script>
+<script src="/js/student.js"></script>
 </body></html>
