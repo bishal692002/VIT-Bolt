@@ -8,7 +8,7 @@
   const addressList = document.getElementById('addressList');
   const addressEmpty = document.getElementById('addressEmpty');
   const addAddressBtn = document.getElementById('addAddressBtn');
-  let addresses = JSON.parse(localStorage.getItem('vitato_addresses')||'[]');
+  let addresses = [];
 
   function switchTab(name){
     tabButtons.forEach(btn=>{
@@ -61,24 +61,44 @@
       <div>${a.line1}</div>
       ${a.line2? `<div>${a.line2}</div>`:''}
       ${a.landmark? `<div class='text-gray-500'>${a.landmark}</div>`:''}
-      <div class='flex justify-end'><button data-del='${i}' class='text-red-500 text-[11px]'>Delete</button></div>
+      <div class='flex justify-end gap-3'>
+        <button data-edit='${a._id}' class='text-yellow-700 text-[11px]'>Edit</button>
+        <button data-del='${a._id}' class='text-red-500 text-[11px]'>Delete</button>
+      </div>
     </div>`).join('');
     addressEmpty.classList.toggle('hidden', addresses.length>0);
-    addressList.querySelectorAll('[data-del]').forEach(btn=> btn.addEventListener('click', ()=>{
-      const idx = parseInt(btn.getAttribute('data-del')); addresses.splice(idx,1); persistAddresses(); renderAddresses();
+    addressList.querySelectorAll('[data-del]').forEach(btn=> btn.addEventListener('click', async ()=>{
+      const id = btn.getAttribute('data-del');
+      if(!confirm('Delete this address?')) return;
+      await fetch('/api/addresses/'+id, { method:'DELETE', headers:{ Authorization:'Bearer '+token }});
+      await loadAddresses();
+    }));
+    addressList.querySelectorAll('[data-edit]').forEach(btn=> btn.addEventListener('click', async ()=>{
+      const id = btn.getAttribute('data-edit');
+      const a = addresses.find(x=> x._id===id); if(!a) return;
+      const label = prompt('Label', a.label||'')||'';
+      const line1 = prompt('Line 1', a.line1)||a.line1; if(!line1) return;
+      const line2 = prompt('Line 2', a.line2||'')||'';
+      const landmark = prompt('Landmark', a.landmark||'')||'';
+      await fetch('/api/addresses/'+id, { method:'PUT', headers:{ 'Content-Type':'application/json', Authorization:'Bearer '+token }, body: JSON.stringify({ label, line1, line2, landmark }) });
+      await loadAddresses();
     }));
   }
-  function persistAddresses(){ localStorage.setItem('vitato_addresses', JSON.stringify(addresses)); }
-  addAddressBtn?.addEventListener('click', ()=>{
+  async function loadAddresses(){
+    if(!token) return;
+    const res = await fetch('/api/addresses', { headers:{ Authorization:'Bearer '+token }});
+    if(res.ok){ addresses = await res.json(); renderAddresses(); }
+  }
+  addAddressBtn?.addEventListener('click', async ()=>{
     const label = prompt('Label (Hostel / Block)?'); if(label===null) return;
     const line1 = prompt('Line 1 (Required)'); if(!line1) return;
     const line2 = prompt('Line 2 (Optional)')||'';
     const landmark = prompt('Landmark (Optional)')||'';
-    addresses.push({ label, line1, line2, landmark });
-    persistAddresses(); renderAddresses();
+    await fetch('/api/addresses', { method:'POST', headers:{ 'Content-Type':'application/json', Authorization:'Bearer '+token }, body: JSON.stringify({ label, line1, line2, landmark }) });
+    await loadAddresses();
   });
 
   loadOrders();
-  renderAddresses();
+  loadAddresses();
   switchTab('overview');
 })();

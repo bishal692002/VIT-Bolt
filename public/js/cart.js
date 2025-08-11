@@ -6,6 +6,64 @@
   const summaryBox = document.getElementById('cartSummary');
   const checkoutBtn = document.getElementById('checkoutBtn');
   const payBtn = document.getElementById('payBtn');
+  const addAddrBtn = document.getElementById('addAddrBtn');
+  const addressListCart = document.getElementById('addressListCart');
+  const noAddressMsg = document.getElementById('noAddressMsg');
+  let addresses = [];
+  let selectedAddressIndex = 0;
+
+  async function loadAddresses(){
+    const token = localStorage.getItem('vitato_token');
+    if(!token) return;
+    const res = await fetch('/api/addresses', { headers:{ Authorization:'Bearer '+token }});
+    if(res.ok){ addresses = await res.json(); if(selectedAddressIndex >= addresses.length) selectedAddressIndex = 0; renderAddresses(); }
+  }
+  function renderAddresses(){
+    if(!addressListCart) return;
+  addressListCart.innerHTML = addresses.map((a,i)=> `<label class='border rounded-md p-2 cursor-pointer flex justify-between gap-3 ${i===selectedAddressIndex? 'border-yellow-400 bg-yellow-50':'border-gray-200 bg-gray-50'}'>
+      <span class='flex-1 text-[11px] leading-relaxed'>
+        <span class='font-medium block mb-0.5'>${a.label||'Address '+(i+1)}</span>
+        <span>${a.line1}${a.line2? ', '+a.line2:''}</span>
+        ${a.landmark? `<span class='block text-gray-500'>${a.landmark}</span>`:''}
+      </span>
+      <span class='flex flex-col items-end gap-1'>
+        <input type='radio' name='addrSel' value='${i}' ${i===selectedAddressIndex?'checked':''} class='mt-1'>
+        <button data-edit='${a._id}' class='text-[10px] text-yellow-700'>Edit</button>
+        <button data-del='${a._id}' class='text-[10px] text-red-500'>Del</button>
+      </span>
+    </label>`).join('');
+    noAddressMsg.classList.toggle('hidden', addresses.length>0);
+    addressListCart.querySelectorAll('input[name="addrSel"]').forEach(r=> r.addEventListener('change', ()=>{ selectedAddressIndex = parseInt(r.value); }));
+    addressListCart.querySelectorAll('[data-edit]').forEach(btn=> btn.addEventListener('click', async ()=>{
+      const id = btn.getAttribute('data-edit'); const a = addresses.find(x=> x._id===id); if(!a) return;
+      const label = prompt('Label', a.label||'')||'';
+      const line1 = prompt('Line 1', a.line1)||a.line1; if(!line1) return;
+      const line2 = prompt('Line 2', a.line2||'')||'';
+      const landmark = prompt('Landmark', a.landmark||'')||'';
+      const token = localStorage.getItem('vitato_token');
+      await fetch('/api/addresses/'+id, { method:'PUT', headers:{ 'Content-Type':'application/json', Authorization:'Bearer '+token }, body: JSON.stringify({ label, line1, line2, landmark }) });
+      loadAddresses();
+    }));
+    addressListCart.querySelectorAll('[data-del]').forEach(btn=> btn.addEventListener('click', async ()=>{
+      if(!confirm('Delete address?')) return;
+      const id = btn.getAttribute('data-del');
+      const token = localStorage.getItem('vitato_token');
+      await fetch('/api/addresses/'+id, { method:'DELETE', headers:{ Authorization:'Bearer '+token }});
+      loadAddresses();
+    }));
+    // Disable checkout if no addresses
+    checkoutBtn.disabled = addresses.length === 0;
+    checkoutBtn.classList.toggle('opacity-50', checkoutBtn.disabled);
+  }
+  addAddrBtn?.addEventListener('click', async ()=>{
+    const label = prompt('Label (Hostel / Block)?'); if(label===null) return;
+    const line1 = prompt('Line 1 (Required)'); if(!line1) return;
+    const line2 = prompt('Line 2 (Optional)')||'';
+    const landmark = prompt('Landmark (Optional)')||'';
+    const token = localStorage.getItem('vitato_token');
+    await fetch('/api/addresses', { method:'POST', headers:{ 'Content-Type':'application/json', Authorization:'Bearer '+token }, body: JSON.stringify({ label, line1, line2, landmark }) });
+    await loadAddresses(); selectedAddressIndex = addresses.length - 1; renderAddresses();
+  });
 
   function getCart(){ return JSON.parse(localStorage.getItem('vitato_cart')||'[]'); }
   function setCart(c){ localStorage.setItem('vitato_cart', JSON.stringify(c)); }
@@ -75,9 +133,11 @@
     if(!cart.length) return;
     const token = localStorage.getItem('vitato_token');
     if(!token){ alert('Login required'); return; }
+    if(!addresses.length){ if(!confirm('No delivery address saved. Add one?')) return; }
     checkoutBtn.disabled = true; checkoutBtn.textContent='Processing...';
     try {
-      const res = await fetch('/api/payments/create-order', { method:'POST', headers:{'Content-Type':'application/json', Authorization:'Bearer '+token}, body: JSON.stringify({ items: cart }) });
+  const address = addresses[selectedAddressIndex] || null;
+      const res = await fetch('/api/payments/create-order', { method:'POST', headers:{'Content-Type':'application/json', Authorization:'Bearer '+token}, body: JSON.stringify({ items: cart, address }) });
       const data = await res.json();
       if(!res.ok){ alert(data.error||'Failed'); return; }
       const key = await loadRazorpayKey();
@@ -125,5 +185,6 @@
     finally { checkoutBtn.disabled=false; checkoutBtn.textContent='Checkout'; }
   });
 
+  loadAddresses();
   loadDetails();
 })();

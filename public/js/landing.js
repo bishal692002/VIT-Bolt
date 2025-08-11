@@ -7,6 +7,7 @@
   const container = document.getElementById('lottieContainer');
   if(!container) return;
   const fallback = document.getElementById('lottieFallback');
+  const logoOverlay = document.getElementById('heroLogoOverlay');
 
   // You can place your animation JSON at /animations/food-delivery.json
   // For now attempt to load; if 404 we'll keep fallback visible.
@@ -14,13 +15,16 @@
     .then(r => { if(!r.ok) throw new Error('Animation JSON missing'); return r.json(); })
     .then(data => {
       if(fallback) fallback.style.display='none';
-      lottie.loadAnimation({
+      const anim = lottie.loadAnimation({
         container,
         animationData: data,
         renderer: 'svg',
         loop: true,
         autoplay: true,
         rendererSettings: { preserveAspectRatio: 'xMidYMid meet' }
+      });
+      anim.addEventListener('DOMLoaded', ()=>{
+        if(logoOverlay) logoOverlay.classList.remove('hidden');
       });
     })
     .catch(err => {

@@ -20,6 +20,14 @@
     <h1 class="text-2xl font-semibold mb-6">Your Cart</h1>
     <div id="cartItems" class="space-y-4"></div>
   <div id="cartSummary" class="mt-8 p-5 bg-white rounded-lg shadow-sm border border-gray-100 hidden">
+      <div id="addressSection" class="mb-5">
+        <div class="flex items-center justify-between mb-2">
+          <h2 class="font-medium text-sm">Delivery Address</h2>
+          <button id="addAddrBtn" class="text-xs text-yellow-700 hover:underline">Add</button>
+        </div>
+        <div id="addressListCart" class="space-y-2 text-xs"></div>
+        <p id="noAddressMsg" class="text-xs text-gray-500 hidden">No addresses yet. Add one.</p>
+      </div>
       <div class="flex justify-between mb-2 text-sm"><span>Subtotal</span><span id="subtotalAmt">₹0</span></div>
       <div class="flex justify-between mb-2 text-sm"><span>Delivery Fee</span><span id="deliveryFeeAmt">₹0</span></div>
       <div class="flex justify-between font-semibold text-lg"><span>Total</span><span id="totalAmt">₹0</span></div>

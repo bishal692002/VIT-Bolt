@@ -152,6 +152,45 @@ router.post('/rider/orders/:id/decline', ensureAuth, requireRole('delivery'), as
   res.json({ ok: true });
 });
 
+// ---------------- Address Management (Student) ----------------
+router.get('/addresses', ensureAuth, async (req, res) => {
+  // Return addresses for current user
+  const user = req.user; // populated from token (no DB fetch yet)
+  const dbUser = await (await import('../models/User.js')).default.findById(user.id, 'addresses');
+  res.json(dbUser?.addresses || []);
+});
+router.post('/addresses', ensureAuth, async (req, res) => {
+  const { label, line1, line2, landmark } = req.body;
+  if(!line1) return res.status(400).json({ error: 'line1 required' });
+  const UserModel = (await import('../models/User.js')).default;
+  const user = await UserModel.findById(req.user.id);
+  user.addresses.push({ label, line1, line2, landmark });
+  await user.save();
+  res.json(user.addresses[user.addresses.length-1]);
+});
+router.put('/addresses/:id', ensureAuth, async (req, res) => {
+  const { label, line1, line2, landmark } = req.body;
+  const UserModel = (await import('../models/User.js')).default;
+  const user = await UserModel.findById(req.user.id);
+  const addr = user.addresses.id(req.params.id);
+  if(!addr) return res.status(404).json({ error: 'Not found' });
+  if(line1) addr.line1 = line1;
+  if(label !== undefined) addr.label = label;
+  addr.line2 = line2 || '';
+  addr.landmark = landmark || '';
+  await user.save();
+  res.json(addr);
+});
+router.delete('/addresses/:id', ensureAuth, async (req, res) => {
+  const UserModel = (await import('../models/User.js')).default;
+  const user = await UserModel.findById(req.user.id);
+  const addr = user.addresses.id(req.params.id);
+  if(!addr) return res.status(404).json({ error: 'Not found' });
+  addr.deleteOne();
+  await user.save();
+  res.json({ ok: true });
+});
+
 // Rider assigned (active) orders
 router.get('/rider/orders/assigned', ensureAuth, requireRole('delivery'), async (req, res) => {
   const orders = await Order.find({ deliveryPartner: req.user.id, status: { $ne: 'delivered' } })
