@@ -1,0 +1,29 @@
+version: "3.9"
+services:
+  mongo:
+    image: mongo:6
+    restart: unless-stopped
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+  app:
+    build: .
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      # Provide your real values here or via an .env file (compose will load it automatically)
+      - PORT=3000
+      - NODE_ENV=production
+      - MONGO_URI=mongodb://mongo:27017/vitatoo
+      - JWT_SECRET=change-me
+      # Razorpay (optional for local unless you test payments)
+      - RAZORPAY_KEY_ID=your_key_id
+      - RAZORPAY_KEY_SECRET=your_key_secret
+      # CORS origin for frontend (if needed)
+      - CLIENT_ORIGIN=http://localhost:3000
+    depends_on:
+      - mongo
+volumes:
+  mongo_data:
