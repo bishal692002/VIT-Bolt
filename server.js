@@ -78,4 +78,4 @@ app.get('/', (req, res) => {
 });
 
 const PORT = process.env.PORT || 3000;
-httpServer.listen(PORT, () => console.log(`VITato server running on port ${PORT}`));
+httpServer.listen(PORT,"0.0.0.0", () => console.log(`VITato server running on port ${PORT}`));

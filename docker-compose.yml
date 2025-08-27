@@ -3,27 +3,31 @@ services:
   mongo:
     image: mongo:6
     restart: unless-stopped
-    ports:
-      - "27017:27017"
     volumes:
       - mongo_data:/data/db
+    healthcheck:
+      test: ["CMD-SHELL", "mongosh --quiet --eval 'db.adminCommand(\"ping\").ok' | grep 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
   app:
     build: .
     restart: unless-stopped
     ports:
       - "3000:3000"
     environment:
-      # Provide your real values here or via an .env file (compose will load it automatically)
       - PORT=3000
       - NODE_ENV=production
-      - MONGO_URI=mongodb://mongo:27017/vitatoo
+      - MONGO_URI=mongodb://mongo:27017/vitato
       - JWT_SECRET=change-me
-      # Razorpay (optional for local unless you test payments)
-      - RAZORPAY_KEY_ID=your_key_id
-      - RAZORPAY_KEY_SECRET=your_key_secret
-      # CORS origin for frontend (if needed)
-      - CLIENT_ORIGIN=http://localhost:3000
+      # Optional for payments (leave blank if not testing)
+      - RAZORPAY_KEY_ID=
+      - RAZORPAY_KEY_SECRET=
+      - RAZORPAY_WEBHOOK_SECRET=
     depends_on:
-      - mongo
+      mongo:
+        condition: service_healthy
+
 volumes:
   mongo_data:
