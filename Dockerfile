@@ -6,9 +6,9 @@ WORKDIR /app
 # Native build tools are required for some deps on Alpine (e.g., bcrypt)
 RUN apk add --no-cache python3 make g++
 
-# Install dependencies first for better caching (no lockfile: use npm install)
-COPY package*.json ./
-RUN npm install
+# Install dependencies first for better caching (use lockfile)
+COPY package.json package-lock.json ./
+RUN npm ci
 
 # Copy the rest of the app
 COPY . .
@@ -27,7 +27,7 @@ ENV NODE_ENV=production \
 
 # Copy production node_modules from builder (avoids native rebuilds in runtime)
 COPY --from=builder /app/node_modules ./node_modules
-COPY package*.json ./
+COPY package.json package-lock.json ./
 
 # Copy built assets and server code
 COPY --from=builder /app/public ./public

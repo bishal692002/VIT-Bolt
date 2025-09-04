@@ -13,7 +13,7 @@ Campus‑exclusive food delivery for VIT Bhopal.
 Prereqs: Node 20+, MongoDB running locally, PowerShell.
 
 1) Copy .env.example to .env (create one if missing) and set:
-	- MONGO_URI=mongodb://127.0.0.1:27017/vitatoo
+	- MONGO_URI=mongodb://127.0.0.1:27017/vitato
 	- JWT_SECRET=change-me
 	- RAZORPAY_KEY_ID=your_key_id (optional)
 	- RAZORPAY_KEY_SECRET=your_key_secret (optional)
@@ -37,14 +37,14 @@ Good for quick checks when you already have MongoDB elsewhere.
 2) Build the image:
 	- docker build -t vitatoo .
 3) Run the container (replace MONGO_URI if needed):
-	- docker run -p 3000:3000 -e MONGO_URI="mongodb://host.docker.internal:27017/vitatoo" -e JWT_SECRET="change-me" vitatoo
+	- docker run -p 3000:3000 -e MONGO_URI="mongodb://host.docker.internal:27017/vitato" -e JWT_SECRET="change-me" vitatoo
 
 Open http://localhost:3000
 
 ## Run with Docker Compose (app + Mongo)
 This is the simplest way for beginners—Compose spins up Mongo and the app together.
 
-1) Edit docker-compose.yml env values if needed.
+1) Edit docker-compose.yml env values if needed (defaults to mongodb://mongo:27017/vitato).
 2) Start both services:
 	- docker compose up --build
 3) Stop:

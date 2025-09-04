@@ -1,10 +1,12 @@
-version: "3.9"
 services:
   mongo:
-    image: mongo:6
+    image: mongo:7
     restart: unless-stopped
+    environment:
+      - MONGO_INITDB_DATABASE=vitato
     volumes:
       - mongo_data:/data/db
+    # Healthcheck uses mongosh (available in official image)
     healthcheck:
       test: ["CMD-SHELL", "mongosh --quiet --eval 'db.adminCommand(\"ping\").ok' | grep 1"]
       interval: 10s
