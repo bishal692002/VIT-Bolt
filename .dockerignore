@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # Ignore local files not needed in the image
 node_modules
 npm-debug.log*
@@ -30,3 +31,23 @@ Thumbs.db
 public/css/tailwind.css
 Dockerfile*
 .dockerignore
+=======
+# Ignore local files not needed in the image
+node_modules
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-store
+
+# Env and secrets
+.env
+.env.*
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Editor/IDE
+.vscode
+*.swp
+>>>>>>> c068d1e (Changed some issues)

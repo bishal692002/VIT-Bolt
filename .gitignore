@@ -1,85 +1,216 @@
-# Dependencies
+# ========================================
+# Node.js / NPM
+# ========================================
 node_modules/
-
-# Logs
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-
-# Env files
-.env
-.env.*
-
-# OS/Editor
-.DS_Store
-Thumbs.db
-.vscode/
-*.swp
-
-# Build outputs
-public/css/tailwind.css# Node dependencies
-node_modules/
-
-# Environment secrets
-.env
-.env.local
-.env.*.local
-
-# Logs
-logs/
-*.log
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
+lerna-debug.log*
 
-# Runtime data
+# Optional npm cache directory
+.npm
+
+# Optional eslint cache
+.eslintcache
+
+# Optional REPL history
+.node_repl_history
+
+# ========================================
+# Environment Variables & Secrets
+# ========================================
+.env
+.env.*
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# IMPORTANT: Never commit these!
+# Contains MongoDB credentials, JWT secrets, API keys
+
+# ========================================
+# Build Outputs
+# ========================================
+dist/
+build/
+.next/
+out/
+.dist/
+
+# Tailwind CSS generated output (rebuilds from source)
+public/css/tailwind.css
+public/css/tailwind.css.map
+
+# ========================================
+# Logs & Runtime Data
+# ========================================
+logs/
+*.log
 pids/
 *.pid
 *.seed
 *.pid.lock
 
-# Coverage
+# ========================================
+# Testing & Coverage
+# ========================================
 coverage/
+*.lcov
+.nyc_output/
+test-results/
 
-# Build / cache
+# ========================================
+# OS Generated Files
+# ========================================
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# ========================================
+# Editor & IDE
+# ========================================
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+.idea/
+*.sublime-workspace
+*.sublime-project
+.project
+.classpath
+.settings/
+*.swp
+*.swo
+*.swn
+*.bak
+*.orig
+*~
+
+# ========================================
+# Temporary Files
+# ========================================
 .tmp/
 .temp/
 .cache/
-.dist/
-dist/
-build/
-.next/
+tmp/
+temp/
 
-# Tailwind generated output (can rebuild). Comment out if you prefer to commit it.
-public/css/tailwind.css
-public/css/tailwind.css.map
+# ========================================
+# Database
+# ========================================
+# MongoDB local dumps
+_dump/
+dumps/
+*.dump
+db/data/
 
-# OS / Editor
-.DS_Store
-Thumbs.db
-.idea/
-.vscode/*
-!.vscode/settings.json
+# SQLite
+*.sqlite
+*.sqlite3
+*.db
 
-# Optional lockfiles (keep the one you use)
+# ========================================
+# Uploads & User Generated Content
+# ========================================
+# Keep uploaded images in git, but ignore if large
+# Uncomment if you want to ignore uploads folder:
+# public/uploads/*
+# !public/uploads/.gitkeep
+
+# ========================================
+# Package Manager Lockfiles
+# ========================================
+# Uncomment the lockfile you DON'T use:
 # yarn.lock
 # pnpm-lock.yaml
 # package-lock.json
 
+# ========================================
+# Deployment & DevOps
+# ========================================
+.vercel
+.netlify
+.firebase
+.serverless/
+.fusebox/
+.dynamodb/
+
+# ========================================
 # Misc
-*.swp
-*.swo
-*.orig
-
-# Mongo local dumps / data
-_dump/
-dumps/
-
-# Socket.io transient files (if any)
-public/socket.io/
-
+# ========================================
 # Archives
 *.tar
 *.tgz
 *.zip
+*.gz
+*.rar
+*.7z
+
+# Certificates
+*.pem
+*.key
+*.crt
+*.cer
+*.p12
+*.pfx
+
+# Test files (if you don't want to commit test scripts)
+test-admin-features.js
+
+# Docker
+# Uncomment if you don't want to commit Docker files:
+# docker-compose.override.yml
+# .dockerignore
+
+# ========================================
+# Documentation - Extra Files
+# ========================================
+# Keep only README.md for GitHub, ignore detailed docs
+ADMIN_FEATURES.md
+IMPLEMENTATION_SUMMARY.md
+ARCHITECTURE.md
+QUICK_START.md
+DEPLOYMENT_CHECKLIST.md
+PROJECT_COMPLETE.md
+push-to-github.sh
+
+# ========================================
+# Project Specific
+# ========================================
+# Socket.io transient files
+public/socket.io/
+
+# Seed data (if you don't want to commit)
+# seed/
+
+# Local configuration
+config/local.js
+
+# ========================================
+# Security & Sensitive Data
+# ========================================
+# Never commit these patterns:
+**/secret*
+**/secrets*
+**/.secret
+**/*_secret.*
+**/*-secret.*
+**/*.private.*
+**/*private*
+
+# API Keys
+**/apikeys*
+**/*apikey*
+
+# Credentials
+**/credentials*
+**/*credentials*

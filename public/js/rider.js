@@ -120,12 +120,54 @@
   modalClose?.addEventListener('click', ()=>{ modal.classList.add('hidden'); modal.classList.remove('flex'); });
   modal?.addEventListener('click', e=>{ if(e.target===modal) { modal.classList.add('hidden'); modal.classList.remove('flex'); }});
 
-  socket.on('orders_updated', ()=>{ loadAvailable(); loadMine(); loadHistory(); loadStats(); });
-  socket.on('new_order', ()=>{ loadAvailable(); });
-  socket.on('order_claimed', ({ orderId })=>{ // remove claimed from available list
-    const card = available.querySelector(`[data-claim='${orderId}']`)?.closest('div');
-    if(card){ card.classList.add('opacity-40'); setTimeout(loadAvailable, 300); }
+  socket.on('orders_updated', ()=>{ 
+    console.log('Rider: orders_updated');
+    // Selective update - preserve scroll position and highlight changes
+    const currentAvailable = Array.from(available.querySelectorAll('[data-claim]')).map(btn => btn.getAttribute('data-claim'));
+    loadAvailable().then(() => {
+      // Highlight new available orders
+      const newAvailable = Array.from(available.querySelectorAll('[data-claim]')).map(btn => btn.getAttribute('data-claim'));
+      const addedOrders = newAvailable.filter(id => !currentAvailable.includes(id));
+      addedOrders.forEach(id => {
+        const card = available.querySelector(`[data-claim='${id}']`)?.closest('div');
+        if(card) {
+          card.classList.add('ring-2', 'ring-yellow-400');
+          setTimeout(() => card.classList.remove('ring-2', 'ring-yellow-400'), 2000);
+        }
+      });
+    });
+    loadMine(); loadHistory(); loadStats(); 
   });
+  socket.on('new_order', ()=>{ 
+    console.log('Rider: new_order');
+    loadAvailable();
+    showRiderNotification('New delivery available!');
+  });
+  socket.on('order_claimed', ({ orderId })=>{ 
+    console.log('Rider: order_claimed', orderId);
+    // Smoothly remove claimed order from available list
+    const card = available.querySelector(`[data-claim='${orderId}']`)?.closest('div');
+    if(card){ 
+      card.style.transition = 'all 0.3s ease';
+      card.style.transform = 'translateX(-100%)';
+      card.style.opacity = '0';
+      setTimeout(() => loadAvailable(), 300); 
+    }
+  });
+  
+  function showRiderNotification(message) {
+    const notification = document.createElement('div');
+    notification.className = 'fixed top-4 right-4 bg-blue-500 text-white px-4 py-2 rounded-md shadow-lg z-50 transform transition-all duration-300';
+    notification.textContent = message;
+    notification.style.transform = 'translateX(100%)';
+    document.body.appendChild(notification);
+    
+    setTimeout(() => notification.style.transform = 'translateX(0)', 100);
+    setTimeout(() => {
+      notification.style.transform = 'translateX(100%)';
+      setTimeout(() => document.body.removeChild(notification), 300);
+    }, 3000);
+  }
   loadAvailable();
   loadMine();
   loadHistory();

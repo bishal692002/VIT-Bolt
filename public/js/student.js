@@ -1,5 +1,14 @@
 (()=>{
   const token = localStorage.getItem('vitato_token');
+  // Live updates via socket.io
+  let socket;
+  try {
+    socket = io({ auth: token ? { token } : {} });
+    if(token) {
+      const payload = JSON.parse(atob(token.split('.')[1]));
+      socket.emit('join_user', payload.id);
+    }
+  } catch {}
   const tabButtons = document.querySelectorAll('#studentTabs .tabBtn');
   const panels = document.querySelectorAll('.panel');
   const recentOrdersEl = document.getElementById('recentOrders');
@@ -101,4 +110,106 @@
   loadOrders();
   loadAddresses();
   switchTab('overview');
+
+  // Refresh orders automatically on server events
+  if(socket){
+    // Join user room explicitly for personalized events
+    if(token) {
+      try {
+        const payload = JSON.parse(atob(token.split('.')[1]));
+        socket.emit('join_user', payload.id);
+        console.log('Student joined room:', payload.id);
+      } catch {}
+    }
+    
+    // Selective update functions for better UX
+    const updateOrderStatus = (orderId, newStatus) => {
+      // Update in recent orders
+      const recentCard = recentOrdersEl.querySelector(`[href='/track.html?order=${orderId}']`)?.closest('div');
+      if(recentCard) {
+        const statusEl = recentCard.querySelector('.uppercase');
+        if(statusEl) {
+          statusEl.textContent = newStatus;
+          statusEl.className = `uppercase tracking-wide ${newStatus==='delivered'?'text-green-600':'text-yellow-600'}`;
+        }
+      }
+      
+      // Update in order history
+      const historyCard = orderHistoryEl.querySelector(`[href='/track.html?order=${orderId}']`)?.closest('div');
+      if(historyCard) {
+        const statusEl = historyCard.querySelector('.text-right .text-\\[11px\\]');
+        if(statusEl) {
+          statusEl.textContent = newStatus;
+          statusEl.className = `text-[11px] ${newStatus==='delivered'?'text-green-600':'text-yellow-600'}`;
+        }
+      }
+      
+      // Update active order if it matches
+      if(activeOrderEl.innerHTML.includes(orderId.substring(0,6))) {
+        if(newStatus === 'delivered' || newStatus === 'out_for_delivery') {
+          // Order is no longer "active" - reload active section only
+          setTimeout(() => loadOrders(), 100);
+        }
+      }
+      
+      // Show toast notification
+      showToast(`Order #${orderId.substring(0,6)} is now ${newStatus}`);
+    };
+    
+    const showToast = (message) => {
+      const toast = document.createElement('div');
+      toast.className = 'fixed top-4 right-4 bg-green-500 text-white px-4 py-2 rounded-md shadow-lg z-50 transform transition-all duration-300';
+      toast.textContent = message;
+      toast.style.transform = 'translateX(100%)';
+      document.body.appendChild(toast);
+      
+      setTimeout(() => toast.style.transform = 'translateX(0)', 100);
+      setTimeout(() => {
+        toast.style.transform = 'translateX(100%)';
+        setTimeout(() => document.body.removeChild(toast), 300);
+      }, 3000);
+    };
+    
+    const fullRefresh = () => { 
+      console.log('Full refresh due to socket event');
+      try { loadOrders(); } catch {} 
+    };
+    
+    socket.on('order_status', (data) => {
+      console.log('Received order_status:', data);
+      if(data.orderId && data.status) {
+        updateOrderStatus(data.orderId, data.status);
+      } else {
+        fullRefresh();
+      }
+    });
+    
+    socket.on('orders_updated', () => {
+      console.log('Received orders_updated - doing full refresh');
+      fullRefresh();
+    });
+    
+    socket.on('new_order', () => {
+      console.log('Received new_order');
+      // This is for vendors/riders, student doesn't need to refresh
+    });
+    
+    socket.on('order_paid', (data) => {
+      console.log('Received order_paid:', data);
+      if(data.orderId) {
+        updateOrderStatus(data.orderId, 'placed');
+        showToast('Payment successful! Your order is being prepared.');
+      } else {
+        fullRefresh();
+      }
+    });
+    
+    socket.on('order_payment_failed', (data) => {
+      console.log('Received order_payment_failed:', data);
+      showToast('Payment failed. Please try again.');
+    });
+    
+    socket.on('connect', () => console.log('Student socket connected'));
+    socket.on('disconnect', () => console.log('Student socket disconnected'));
+  }
 })();

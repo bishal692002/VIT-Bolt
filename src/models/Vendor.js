@@ -5,7 +5,11 @@ const vendorSchema = new mongoose.Schema({
   description: String,
   categories: [String],
   image: String,
-  isActive: { type: Boolean, default: true }
-});
+  isActive: { type: Boolean, default: true },
+  contactEmail: String,
+  contactPhone: String,
+  address: String,
+  ownerName: String
+}, { timestamps: true });
 
 export default mongoose.model('Vendor', vendorSchema);

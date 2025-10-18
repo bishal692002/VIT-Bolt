@@ -23,7 +23,7 @@
       const badge = item.inStock ? '<span class="text-green-600 text-xs font-medium flex items-center">✔ In stock</span>' : '<span class="text-red-500 text-xs font-medium flex items-center">✖ Out</span>';
       return `
       <div class="bg-white border border-gray-100 rounded-lg shadow-sm flex flex-col overflow-hidden transition transform hover:scale-[1.02]">
-        <div class="h-40 bg-gray-100 flex items-center justify-center text-gray-400 text-sm">Image</div>
+        ${item.image ? `<img src="${item.image}" alt="${item.name||'food'}" class="w-full h-40 object-cover bg-gray-100" loading="lazy"/>` : `<div class="h-40 bg-gray-100 flex items-center justify-center text-gray-400 text-sm">No image</div>`}
         <div class="p-4 flex flex-col flex-1">
           <h3 class="font-semibold mb-1">${item.name}</h3>
           <p class="text-sm text-gray-500 mb-1">${item.vendor?.name||''}</p>
@@ -44,6 +44,18 @@
       });
     });
   }
+
+  // Load categories dynamically so student view shows vendor-added categories
+  (async function loadCategories(){
+    try{
+      const res = await fetch('/api/categories');
+      if(!res.ok) return;
+      const cats = await res.json();
+      if(!categoryFilter) return;
+      const existing = Array.from(categoryFilter.options).map(o=>o.value);
+      cats.forEach(c=>{ if(!existing.includes(c)){ const opt = document.createElement('option'); opt.value = c; opt.textContent = c; categoryFilter.appendChild(opt); }});
+    } catch {}
+  })();
 
   searchInput.addEventListener('input', ()=> { loadMenu(); });
   categoryFilter.addEventListener('change', ()=> { loadMenu(); });

@@ -3,8 +3,34 @@ import FoodItem from '../models/FoodItem.js';
 import Order from '../models/Order.js';
 import Vendor from '../models/Vendor.js';
 import { ensureAuth, requireRole } from '../middleware/auth.js';
+import ensureVendorContext from '../middleware/vendorContext.js';
+import fs from 'fs';
+import path from 'path';
 
 const router = Router();
+
+// Helper: fetch remote image and save to public/uploads, return local path or original URL on failure
+async function fetchAndSaveImage(url){
+  try{
+    if(!/^https?:\/\//i.test(url)) return url;
+    const res = await fetch(url);
+    if(!res.ok) throw new Error('Failed to fetch image');
+    const ct = res.headers.get('content-type') || '';
+    if(!ct.startsWith('image/')) throw new Error('URL did not return an image content-type');
+    const ext = (ct.split('/')[1] || 'jpg').split(';')[0].split('+')[0];
+    const arrayBuffer = await res.arrayBuffer();
+    const buffer = Buffer.from(arrayBuffer);
+    const uploadsDir = path.join(process.cwd(), 'public', 'uploads');
+    if(!fs.existsSync(uploadsDir)) fs.mkdirSync(uploadsDir, { recursive: true });
+    const fileName = `${Date.now()}-${Math.random().toString(36).slice(2,8)}.${ext}`;
+    const filePath = path.join(uploadsDir, fileName);
+    fs.writeFileSync(filePath, buffer);
+    return '/uploads/' + fileName;
+  } catch (e) {
+    console.warn('fetchAndSaveImage failed for', url, e.message);
+    return url; // fallback to original URL (may still fail to render)
+  }
+}
 
 router.get('/menu', async (req, res) => {
   const { q, category } = req.query;
@@ -21,9 +47,41 @@ router.post('/orders', ensureAuth, (req, res) => {
 });
 
 router.get('/orders/:id', ensureAuth, async (req, res) => {
-  const order = await Order.findById(req.params.id).populate('items.food').populate('deliveryPartner');
+  const order = await Order.findById(req.params.id)
+    .populate('items.food')
+    .populate('deliveryPartner')
+    .populate('user', 'name phone email');
   if (!order) return res.status(404).json({ error: 'Not found' });
-  if (order.user.toString() !== req.user.id.toString()) return res.status(403).json({ error: 'Forbidden' });
+  
+  // Allow access to: the customer who placed it, vendors whose items are in the order, or delivery partner
+  const isCustomer = order.user._id.toString() === req.user.id.toString();
+  const isDeliveryPartner = order.deliveryPartner && order.deliveryPartner._id.toString() === req.user.id.toString();
+  
+  let isVendor = false;
+  if (req.user.role === 'vendor') {
+    let vendorId = req.user.vendor || null;
+    if (!vendorId) {
+      try {
+        const byUser = await Vendor.findOne({ user: req.user.id });
+        if (byUser) vendorId = byUser._id;
+      } catch {}
+      if (!vendorId && req.user.email) {
+        try {
+          const byEmail = await Vendor.findOne({ contactEmail: req.user.email.toLowerCase() });
+          if (byEmail) vendorId = byEmail._id;
+        } catch {}
+      }
+    }
+    if (vendorId) {
+      const vendorFoodIds = await FoodItem.find({ vendor: vendorId }).distinct('_id');
+      isVendor = order.items.some(item => vendorFoodIds.some(id => id.toString() === item.food._id.toString()));
+    }
+  }
+  
+  if (!isCustomer && !isVendor && !isDeliveryPartner) {
+    return res.status(403).json({ error: 'Forbidden' });
+  }
+  
   res.json(order);
 });
 
@@ -49,38 +107,71 @@ router.get('/vendors', async (req, res) => {
   res.json(vendors);
 });
 
+// Return distinct categories from FoodItem
+router.get('/categories', async (req, res) => {
+  const cats = await FoodItem.distinct('category', { category: { $exists: true, $ne: '' } });
+  res.json(cats.sort());
+});
+
 // Vendor CRUD & data (vendor role, securely scoped)
-router.get('/vendor/items', ensureAuth, requireRole('vendor'), async (req, res) => {
-  if(!req.user.vendor) return res.status(400).json({ error: 'Vendor context missing' });
-  const items = await FoodItem.find({ vendor: req.user.vendor }).sort({ createdAt: -1 });
+// Helper to resolve vendor id from token, or via linked user/email
+async function resolveVendorId(user){
+  // 1) If token has vendor id, use it
+  if (user?.vendor) return user.vendor;
+  // 2) Try finding a vendor linked to the user (legacy pattern; schema may not have this)
+  try {
+    const vByUser = await Vendor.findOne({ user: user.id });
+    if (vByUser) return vByUser._id;
+  } catch {}
+  // 3) Fallback by vendor contactEmail matching the user's email
+  try {
+    if (user?.email){
+      const vByEmail = await Vendor.findOne({ contactEmail: user.email.toLowerCase() });
+      if (vByEmail) return vByEmail._id;
+    }
+  } catch {}
+  return null;
+}
+
+router.get('/vendor/items', ensureAuth, requireRole('vendor'), ensureVendorContext, async (req, res) => {
+  const vendorId = req.vendorId;
+  if(!vendorId) return res.status(403).json({ error: 'Vendor not found' });
+  const items = await FoodItem.find({ vendor: vendorId }).sort({ createdAt: -1 });
   res.json(items);
 });
-router.post('/vendor/items', ensureAuth, requireRole('vendor'), async (req, res) => {
-  if(!req.user.vendor) return res.status(400).json({ error: 'Vendor context missing' });
+router.post('/vendor/items', ensureAuth, requireRole('vendor'), ensureVendorContext, async (req, res) => {
+  const vendorId = req.vendorId;
+  if(!vendorId) return res.status(403).json({ error: 'Vendor not found' });
   const { name, price, category, image, inStock } = req.body;
-  const item = await FoodItem.create({ name, price, category, image, inStock, vendor: req.user.vendor });
+  const finalImage = image ? await fetchAndSaveImage(image) : '';
+  const item = await FoodItem.create({ name, price, category, image: finalImage, inStock, vendor: vendorId });
   req.app.get('io').emit('menu_updated');
   res.json(item);
 });
-router.put('/vendor/items/:id', ensureAuth, requireRole('vendor'), async (req, res) => {
-  if(!req.user.vendor) return res.status(400).json({ error: 'Vendor context missing' });
-  const item = await FoodItem.findOneAndUpdate({ _id: req.params.id, vendor: req.user.vendor }, req.body, { new: true });
+router.put('/vendor/items/:id', ensureAuth, requireRole('vendor'), ensureVendorContext, async (req, res) => {
+  const vendorId = req.vendorId;
+  if(!vendorId) return res.status(403).json({ error: 'Vendor not found' });
+  const update = { ...req.body };
+  if(update.image) update.image = await fetchAndSaveImage(update.image);
+  const item = await FoodItem.findOneAndUpdate({ _id: req.params.id, vendor: vendorId }, update, { new: true });
   if (!item) return res.status(404).json({ error: 'Not found' });
   req.app.get('io').emit('menu_updated');
   res.json(item);
 });
-router.delete('/vendor/items/:id', ensureAuth, requireRole('vendor'), async (req, res) => {
-  if(!req.user.vendor) return res.status(400).json({ error: 'Vendor context missing' });
-  const del = await FoodItem.deleteOne({ _id: req.params.id, vendor: req.user.vendor });
+router.delete('/vendor/items/:id', ensureAuth, requireRole('vendor'), ensureVendorContext, async (req, res) => {
+  const vendorId = req.vendorId;
+  if(!vendorId) return res.status(403).json({ error: 'Vendor not found' });
+  const del = await FoodItem.deleteOne({ _id: req.params.id, vendor: vendorId });
   if(!del.deletedCount) return res.status(404).json({ error: 'Not found' });
   req.app.get('io').emit('menu_updated');
   res.json({ ok: true });
 });
 
 // Vendor orders (orders that include at least one of this vendor's items)
-router.get('/vendor/orders', ensureAuth, requireRole('vendor'), async (req, res) => {
-  if(!req.user.vendor) return res.status(400).json({ error: 'Vendor context missing' });
-  const vendorFoodIds = await FoodItem.find({ vendor: req.user.vendor }).distinct('_id');
+router.get('/vendor/orders', ensureAuth, requireRole('vendor'), ensureVendorContext, async (req, res) => {
+  const vendorId = req.vendorId;
+  if(!vendorId) return res.status(403).json({ error: 'Vendor not found' });
+  const vendorFoodIds = await FoodItem.find({ vendor: vendorId }).distinct('_id');
   if(!vendorFoodIds.length) return res.json([]);
   const orders = await Order.find({ 'items.food': { $in: vendorFoodIds } })
     .sort({ createdAt: -1 })
@@ -88,18 +179,22 @@ router.get('/vendor/orders', ensureAuth, requireRole('vendor'), async (req, res)
     .populate({ path: 'items.food', select: 'name price vendor', populate: { path: 'vendor', select: 'name' } })
     .populate({ path: 'user', select: 'name phone' })
     .populate({ path: 'deliveryPartner', select: 'name phone' });
+  if (process.env.VENDOR_DEBUG === '1') {
+    console.log('[GET /api/vendor/orders] vendorId=', vendorId.toString(), 'orders=', orders.length);
+  }
   res.json(orders);
 });
 
 // Vendor can update order status (placed -> cooking -> ready)
-router.post('/vendor/orders/:id/status', ensureAuth, requireRole('vendor'), async (req, res) => {
+router.post('/vendor/orders/:id/status', ensureAuth, requireRole('vendor'), ensureVendorContext, async (req, res) => {
   const { status } = req.body;
   if(!['cooking','ready'].includes(status)) return res.status(400).json({ error: 'Invalid status' });
-  if(!req.user.vendor) return res.status(400).json({ error: 'Vendor context missing' });
+  const vendorId = req.vendorId;
+  if(!vendorId) return res.status(403).json({ error: 'Vendor not found' });
   // Fetch order & ensure it includes vendor's food items
   const order = await Order.findById(req.params.id);
   if(!order) return res.status(404).json({ error: 'Not found' });
-  const vendorFoodIds = await FoodItem.find({ vendor: req.user.vendor }).distinct('_id');
+  const vendorFoodIds = await FoodItem.find({ vendor: vendorId }).distinct('_id');
   const containsVendorItem = order.items.some(i => vendorFoodIds.find(id => id.toString() === i.food.toString()));
   if(!containsVendorItem) return res.status(403).json({ error: 'Forbidden' });
   // Require payment before progressing beyond placed
@@ -111,9 +206,18 @@ router.post('/vendor/orders/:id/status', ensureAuth, requireRole('vendor'), asyn
   await order.save();
   const io = req.app.get('io');
   io.emit('orders_updated');
+  io.to(`vendor_${vendorId.toString()}`).emit('orders_updated');
   io.to(`order_${order._id}`).emit('order_status', { orderId: order._id.toString(), status: order.status });
   io.to(order.user.toString()).emit('order_status', { orderId: order._id.toString(), status: order.status });
+  if (process.env.VENDOR_DEBUG === '1') {
+    console.log('[POST /api/vendor/orders/:id/status]', { orderId: order._id.toString(), vendorId: vendorId.toString(), status });
+  }
   res.json({ ok: true, status: order.status });
+});
+
+// Diagnostics: resolved vendor info
+router.get('/vendor/me', ensureAuth, requireRole('vendor'), ensureVendorContext, (req, res) => {
+  res.json({ vendorId: req.vendorId?.toString(), email: req.user.email, vendor: req.vendor });
 });
 
 // Order history for student

@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Apply as Vendor - VITato</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/tailwind.css" />
+  <script src="/js/toast.js"></script>
+  <style>
+    body { font-family: 'Inter', sans-serif; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
+    .input-field { transition: all 0.3s ease; }
+    .input-field:focus { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(255, 213, 79, 0.2); }
+    .btn-primary { background: #FFD54F; color: #333; font-weight: 600; transition: all 0.3s ease; }
+    .btn-primary:hover { background: #f7c63a; transform: translateY(-2px); box-shadow: 0 8px 16px rgba(255, 213, 79, 0.3); }
+    .btn-secondary { background: white; border: 2px solid #e5e7eb; color: #374151; font-weight: 500; transition: all 0.3s ease; }
+    .btn-secondary:hover { border-color: #FFD54F; background: #FFFBF0; }
+  </style>
+</head>
+<body class="flex items-center justify-center min-h-full p-4">
+  <div class="w-full max-w-2xl bg-white rounded-2xl shadow-2xl p-8">
+    <div class="text-center mb-8">
+      <img src="/images/VITato.png" alt="VITato" class="h-16 mx-auto mb-4" />
+      <h1 class="text-3xl font-bold text-gray-900 mb-2">Apply as a Vendor</h1>
+      <p class="text-gray-600">Join VITato and start serving delicious food to VIT Bhopal students</p>
+    </div>
+
+    <div id="applicationForm" class="space-y-6">
+      <form id="vendorAppForm" class="space-y-4">
+        <div class="grid md:grid-cols-2 gap-4">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Business Name *</label>
+            <input type="text" name="businessName" required class="input-field w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent" placeholder="e.g., Tasty Bites Cafe" />
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Owner Name *</label>
+            <input type="text" name="ownerName" required class="input-field w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent" placeholder="Your full name" />
+          </div>
+        </div>
+
+        <div class="grid md:grid-cols-2 gap-4">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Contact Number *</label>
+            <input type="tel" name="contactNumber" required pattern="[0-9]{10}" class="input-field w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent" placeholder="10-digit mobile number" />
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Email Address *</label>
+            <input type="email" name="email" required class="input-field w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent" placeholder="your.email@example.com" />
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Business Address *</label>
+          <textarea name="address" required rows="3" class="input-field w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent" placeholder="Full address including building and landmark"></textarea>
+        </div>
+
+        <div class="grid md:grid-cols-2 gap-4">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Type of Cuisine *</label>
+            <select name="cuisineType" required class="input-field w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent">
+              <option value="">Select cuisine type</option>
+              <option value="North Indian">North Indian</option>
+              <option value="South Indian">South Indian</option>
+              <option value="Chinese">Chinese</option>
+              <option value="Italian">Italian</option>
+              <option value="Fast Food">Fast Food</option>
+              <option value="Beverages">Beverages</option>
+              <option value="Desserts">Desserts</option>
+              <option value="Multi-Cuisine">Multi-Cuisine</option>
+              <option value="Other">Other</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">License/ID Number (Optional)</label>
+            <input type="text" name="licenseId" class="input-field w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent" placeholder="FSSAI or GST number" />
+          </div>
+        </div>
+
+        <div class="flex justify-between items-center pt-4">
+          <button type="button" onclick="goBackHome()" class="btn-secondary px-6 py-3 rounded-lg">
+            ← Back to Home
+          </button>
+          <button type="submit" id="submitBtn" class="btn-primary px-8 py-3 rounded-lg">
+            Submit Application
+          </button>
+        </div>
+      </form>
+    </div>
+
+    <!-- Success Status Screen -->
+    <div id="statusScreen" class="hidden space-y-6">
+      <div class="text-center">
+        <div class="mb-4">
+          <svg class="w-20 h-20 mx-auto text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+          </svg>
+        </div>
+        <h2 class="text-2xl font-bold text-gray-900 mb-2">Application Submitted!</h2>
+        <p class="text-gray-600 mb-6">Your vendor application has been received successfully.</p>
+        
+        <div class="bg-purple-50 border-2 border-purple-200 rounded-lg p-6 mb-6">
+          <p class="text-sm text-gray-600 mb-2">Your Application Number</p>
+          <p class="text-3xl font-bold text-purple-700" id="applicationNumber">-</p>
+          <p class="text-xs text-gray-500 mt-2">Please save this number for tracking</p>
+        </div>
+
+        <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-6">
+          <p class="text-sm text-gray-700">
+            <strong>What's Next?</strong><br>
+            Our team will review your application within 2-3 business days. 
+            You'll receive your login credentials via email once approved.
+          </p>
+        </div>
+
+        <div class="space-y-3">
+          <button onclick="checkStatus()" class="w-full btn-primary px-6 py-3 rounded-lg">
+            Check Application Status
+          </button>
+          <button onclick="goBackHome()" class="w-full btn-secondary px-6 py-3 rounded-lg">
+            Back to Home
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Status Check Screen -->
+    <div id="statusCheckScreen" class="hidden space-y-6">
+      <button onclick="hideStatus()" class="text-purple-600 hover:text-purple-700 mb-4">
+        ← Back
+      </button>
+      
+      <div class="text-center mb-6">
+        <h2 class="text-2xl font-bold text-gray-900 mb-2">Check Application Status</h2>
+        <p class="text-gray-600">Enter your application number to check status</p>
+      </div>
+
+      <form id="statusCheckForm" class="space-y-4">
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Application Number</label>
+          <input type="text" id="appNumberInput" required class="input-field w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent" placeholder="VITVENDOR..." />
+        </div>
+        <button type="submit" class="w-full btn-primary px-6 py-3 rounded-lg">
+          Check Status
+        </button>
+      </form>
+
+      <div id="statusResult" class="hidden"></div>
+    </div>
+  </div>
+
+  <script>
+    window.toast = new Toast();
+
+    document.addEventListener('DOMContentLoaded', function() {
+      const appForm = document.getElementById('vendorAppForm');
+      const statusForm = document.getElementById('statusCheckForm');
+
+      appForm.addEventListener('submit', async function(e) {
+        e.preventDefault();
+        
+        const formData = new FormData(appForm);
+        const data = Object.fromEntries(formData.entries());
+        
+        const submitBtn = document.getElementById('submitBtn');
+        submitBtn.disabled = true;
+        submitBtn.textContent = 'Submitting...';
+
+        try {
+          const response = await fetch('/api/vendor-applications/submit', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data)
+          });
+
+          const result = await response.json();
+
+          if (response.ok) {
+            document.getElementById('applicationNumber').textContent = result.applicationNumber;
+            document.getElementById('applicationForm').classList.add('hidden');
+            document.getElementById('statusScreen').classList.remove('hidden');
+            toast.success('Application submitted successfully!');
+          } else {
+            toast.error(result.error || 'Failed to submit application');
+            submitBtn.disabled = false;
+            submitBtn.textContent = 'Submit Application';
+          }
+        } catch (error) {
+          console.error('Submission error:', error);
+          toast.error('Network error. Please try again.');
+          submitBtn.disabled = false;
+          submitBtn.textContent = 'Submit Application';
+        }
+      });
+
+      statusForm.addEventListener('submit', async function(e) {
+        e.preventDefault();
+        
+        const appNumber = document.getElementById('appNumberInput').value.trim();
+        
+        try {
+          const response = await fetch(`/api/vendor-applications/status/${appNumber}`);
+          const result = await response.json();
+
+          const statusResult = document.getElementById('statusResult');
+          
+          if (response.ok) {
+            let statusColor = 'gray';
+            let statusText = result.status;
+            
+            if (result.status === 'approved') {
+              statusColor = 'green';
+              statusText = '✅ Approved';
+            } else if (result.status === 'rejected') {
+              statusColor = 'red';
+              statusText = '❌ Rejected';
+            } else if (result.status === 'pending') {
+              statusColor = 'yellow';
+              statusText = '⏳ Pending Review';
+            }
+
+            let html = `
+              <div class="bg-white border-2 border-${statusColor}-200 rounded-lg p-6">
+                <div class="text-center mb-4">
+                  <p class="text-lg font-semibold text-${statusColor}-700">${statusText}</p>
+                  <p class="text-sm text-gray-600 mt-1">${result.businessName}</p>
+                </div>
+                
+                <div class="space-y-2 text-sm">
+                  <div class="flex justify-between">
+                    <span class="text-gray-600">Application #:</span>
+                    <span class="font-medium">${result.applicationNumber}</span>
+                  </div>
+                  <div class="flex justify-between">
+                    <span class="text-gray-600">Submitted:</span>
+                    <span class="font-medium">${new Date(result.submittedAt).toLocaleDateString()}</span>
+                  </div>
+                  ${result.processedAt ? `
+                  <div class="flex justify-between">
+                    <span class="text-gray-600">Processed:</span>
+                    <span class="font-medium">${new Date(result.processedAt).toLocaleDateString()}</span>
+                  </div>
+                  ` : ''}
+                </div>
+
+                ${result.message ? `
+                <div class="mt-4 p-3 bg-${statusColor}-50 rounded-lg">
+                  <p class="text-sm text-${statusColor}-800">${result.message}</p>
+                </div>
+                ` : ''}
+
+                ${result.rejectionReason ? `
+                <div class="mt-4 p-3 bg-red-50 border border-red-200 rounded-lg">
+                  <p class="text-sm font-medium text-red-800 mb-1">Reason:</p>
+                  <p class="text-sm text-red-700">${result.rejectionReason}</p>
+                </div>
+                ` : ''}
+
+                ${result.credentials ? `
+                <div class="mt-4 p-4 bg-green-50 border-2 border-green-300 rounded-lg">
+                  <p class="text-sm font-bold text-green-800 mb-3">🎉 Your Login Credentials:</p>
+                  <div class="space-y-2 text-sm">
+                    <div>
+                      <span class="text-gray-600">Email:</span>
+                      <span class="font-mono font-medium ml-2">${result.credentials.email}</span>
+                    </div>
+                    <div>
+                      <span class="text-gray-600">Password:</span>
+                      <span class="font-mono font-medium ml-2">${result.credentials.password}</span>
+                    </div>
+                  </div>
+                  <div class="mt-3">
+                    <a href="/vendor.html" class="inline-block w-full text-center btn-primary px-4 py-2 rounded-lg">
+                      Login to Dashboard →
+                    </a>
+                  </div>
+                </div>
+                ` : ''}
+              </div>
+            `;
+
+            statusResult.innerHTML = html;
+            statusResult.classList.remove('hidden');
+          } else {
+            statusResult.innerHTML = `
+              <div class="bg-red-50 border border-red-200 rounded-lg p-4 text-center">
+                <p class="text-red-700">${result.error || 'Application not found'}</p>
+              </div>
+            `;
+            statusResult.classList.remove('hidden');
+          }
+        } catch (error) {
+          console.error('Status check error:', error);
+          toast.error('Failed to check status. Please try again.');
+        }
+      });
+    });
+
+    window.goBackHome = function() {
+      window.location.href = '/';
+    };
+
+    window.checkStatus = function() {
+      document.getElementById('statusScreen').classList.add('hidden');
+      document.getElementById('statusCheckScreen').classList.remove('hidden');
+    };
+
+    window.hideStatus = function() {
+      document.getElementById('statusCheckScreen').classList.add('hidden');
+      document.getElementById('statusScreen').classList.remove('hidden');
+    };
+  </script>
+</body>
+</html>

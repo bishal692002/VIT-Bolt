@@ -11,6 +11,35 @@ export default function orderSocket(httpServer) {
       try {
         const payload = jwt.verify(token, process.env.JWT_SECRET || 'dev_jwt');
         socket.join(payload.id);
+        // If vendor, try to join vendor_<vendorId> room for scoped broadcasts.
+        // Payload may not include vendor id (legacy). Attempt to join using vendor id if present,
+        // otherwise try to resolve by querying Vendor model by linked user id or contactEmail.
+        if (payload.role === 'vendor') {
+          if (payload.vendor) {
+            socket.join(`vendor_${payload.vendor.toString()}`);
+          } else {
+            // try to resolve vendor by linked user or email
+            (async () => {
+              try {
+                let vendorDoc = null;
+                if (payload.id) {
+                  vendorDoc = await Vendor.findOne({ user: payload.id });
+                }
+                if (!vendorDoc && payload.email) {
+                  vendorDoc = await Vendor.findOne({ contactEmail: payload.email.toLowerCase() });
+                }
+                if (vendorDoc) {
+                  socket.join(`vendor_${vendorDoc._id.toString()}`);
+                  if (process.env.NODE_ENV !== 'production') console.log('[socket] joined vendor room for resolved vendor', vendorDoc._id.toString());
+                } else {
+                  if (process.env.NODE_ENV !== 'production') console.log('[socket] vendor payload present but no vendor resolved for user', payload.id);
+                }
+              } catch (e) {
+                if (process.env.NODE_ENV !== 'production') console.warn('[socket] vendor resolution failed', e && (e.message || e));
+              }
+            })();
+          }
+        }
       } catch {}
     }
     socket.on('join_user', (userId) => {

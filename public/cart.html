@@ -1,11 +1,12 @@
 <!DOCTYPE html>
 <html lang="en" class="h-full">
 <head>
-  <meta charset="UTF-8" />
+  <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Cart – VITato</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/css/tailwind.css" />
+  <link rel="stylesheet" href="/css/ui-fixes.css" />
   <style>body{font-family:'Inter',sans-serif;background:#FAFAFA;color:#333}body{opacity:1;transition:opacity .16s ease,transform .24s cubic-bezier(.4,0,.2,1);}body.page-enter{opacity:0;transform:translateY(4px);}body.page-enter-active{opacity:1;transform:translateY(0);}body.page-exit{opacity:0;transform:translateY(-4px);} </style>
 </head>
 <body class="min-h-full flex flex-col">
@@ -37,6 +38,7 @@
   </main>
   <footer class="py-6 text-center text-sm text-gray-500">© 2025 VITato</footer>
   <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+  <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
   <script src="/js/transitions.js"></script>
   <script src="/js/auth.js"></script>
   <script src="/js/cart.js"></script>

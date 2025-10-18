@@ -53,7 +53,9 @@ router.post('/create-order', ensureAuth, async (req, res) => {
     req.app.get('io').to(req.user.id.toString()).emit('order_created', { orderId: order._id });
     res.json({ orderId: order._id, razorpayOrderId: rzpOrder.id, amount: total * 100, currency: 'INR' });
   } catch (e) {
-    res.status(500).json({ error: 'Payment order failed' });
+    console.error('Create-order error:', e && (e.message || e));
+    const msg = process.env.NODE_ENV === 'production' ? 'Payment order failed' : (e.message || 'Payment order failed');
+    res.status(500).json({ error: msg });
   }
 });
 
@@ -74,7 +76,9 @@ router.post('/verify', ensureAuth, async (req, res) => {
     await order.save();
     res.json({ ok: true });
   } catch (e) {
-    res.status(500).json({ error: 'Verification failed' });
+    console.error('Verification error:', e && (e.message || e));
+    const msg = process.env.NODE_ENV === 'production' ? 'Verification failed' : (e.message || 'Verification failed');
+    res.status(500).json({ error: msg });
   }
 });
 
@@ -102,8 +106,24 @@ router.post('/webhook', express.raw({ type: 'application/json' }), async (req, r
           await order.save();
           const io = req.app.get('io');
           io?.to(order.user.toString()).emit('order_paid', { orderId: order._id.toString() });
-          // Broadcast a vendor/rider facing event for new order availability
-          io?.emit('new_order', { orderId: order._id.toString() });
+          // Broadcast vendor-scoped events: find vendors in this order and notify their rooms.
+          try {
+            // populate items.food.vendor to determine vendor ids
+            await order.populate({ path: 'items.food', populate: { path: 'vendor', select: '_id' } });
+            const vendorIds = Array.from(new Set(order.items.map(i => i.food?.vendor?._id?.toString()).filter(Boolean)));
+            if (vendorIds.length) {
+              vendorIds.forEach(vId => {
+                io?.to(`vendor_${vId}`).emit('new_order', { orderId: order._id.toString() });
+                io?.to(`vendor_${vId}`).emit('orders_updated');
+              });
+            } else {
+              // fallback to global broadcast
+              io?.emit('new_order', { orderId: order._id.toString() });
+            }
+          } catch (e) {
+            console.warn('Failed to emit vendor-scoped new_order:', e && (e.message || e));
+            io?.emit('new_order', { orderId: order._id.toString() });
+          }
         } else if(event === 'payment.failed'){
           order.payment.status = 'failed';
           await order.save();
@@ -114,6 +134,7 @@ router.post('/webhook', express.raw({ type: 'application/json' }), async (req, r
     }
     res.json({ received: true });
   } catch (e) {
+    console.error('Webhook processing error:', e && (e.message || e));
     res.status(500).send('Webhook error');
   }
 });

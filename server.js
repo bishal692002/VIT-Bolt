@@ -8,9 +8,14 @@ import jwt from 'jsonwebtoken';
 import User from './src/models/User.js';
 import apiRouter from './src/routes/api.js';
 import paymentRouter from './src/routes/payment.js';
+import adminRouter from './src/routes/admin.js';
+import vendorApplicationRouter from './src/routes/vendorApplication.js';
+import vendorRouter from './src/routes/vendor.js';
+import { adminLogin, adminLogout } from './src/middleware/adminAuth.js';
 import orderSocket from './src/sockets/orderSocket.js';
 import { createServer } from 'http';
 import { geoFenceMiddleware } from './src/middleware/geoFence.js';
+import Vendor from './src/models/Vendor.js';
 
 dotenv.config();
 const app = express();
@@ -36,6 +41,13 @@ app.use('/api/orders', geoFenceMiddleware);
 
 app.use('/api', apiRouter);
 app.use('/api/payments', paymentRouter);
+app.use('/api/vendor-applications', vendorApplicationRouter);
+app.use('/api/vendor', vendorRouter);
+app.use('/vitato/admin-api', adminRouter);
+
+// Admin authentication routes
+app.post('/vitato/admin-login', adminLogin);
+app.post('/vitato/admin-logout', adminLogout);
 
 // Local Auth Routes (JWT)
 app.post('/auth/signup', async (req, res) => {
@@ -58,10 +70,34 @@ app.post('/auth/signup', async (req, res) => {
 app.post('/auth/login', async (req, res) => {
   const { email, password } = req.body;
   if (!email || !password) return res.status(400).json({ error: 'Missing credentials' });
+  const escapeRegExp = (str) => str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
   const user = await User.findOne({ email: email.toLowerCase() });
   if (!user) return res.status(401).json({ error: 'Invalid credentials' });
   const ok = await bcrypt.compare(password, user.passwordHash);
   if (!ok) return res.status(401).json({ error: 'Invalid credentials' });
+  // Auto-link vendor accounts to Vendor collection if missing, so JWT carries vendor id
+  if (user.role === 'vendor' && !user.vendor) {
+    try {
+      let vendorDoc = await Vendor.findOne({ contactEmail: user.email.toLowerCase() });
+      if (!vendorDoc && user.name) {
+        const regex = new RegExp(`^${escapeRegExp(user.name.trim())}$`, 'i');
+        vendorDoc = await Vendor.findOne({ name: regex });
+      }
+      if (!vendorDoc && user.name) {
+        const regex = new RegExp(`^${escapeRegExp(user.name.trim())}$`, 'i');
+        vendorDoc = await Vendor.findOne({ ownerName: regex });
+      }
+      if (vendorDoc) {
+        user.vendor = vendorDoc._id;
+        await user.save();
+        console.log('Linked vendor user', user.email, 'to vendor', vendorDoc._id.toString());
+      } else {
+        console.warn('Vendor login without linked vendor record for', user.email);
+      }
+    } catch (e) {
+      console.warn('Vendor auto-link failed for', user.email, e && (e.message || e));
+    }
+  }
   const payload = { id: user._id, email: user.email, name: user.name, role: user.role };
   if(user.vendor) payload.vendor = user.vendor;
   const token = jwt.sign(payload, process.env.JWT_SECRET || 'dev_jwt', { expiresIn: '7d' });

@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Vendor API</title>
+    <style>
+        body {
+            font-family: monospace;
+            padding: 20px;
+            background: #1a1a1a;
+            color: #0f0;
+        }
+        button {
+            background: #0f0;
+            color: #000;
+            border: none;
+            padding: 10px 20px;
+            margin: 10px 0;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        button:hover {
+            background: #0d0;
+        }
+        .output {
+            background: #000;
+            padding: 15px;
+            margin: 10px 0;
+            border: 1px solid #0f0;
+            white-space: pre-wrap;
+            max-height: 500px;
+            overflow-y: auto;
+        }
+        .error {
+            color: #f00;
+        }
+        .success {
+            color: #0f0;
+        }
+        input {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+            background: #000;
+            color: #0f0;
+            border: 1px solid #0f0;
+            font-family: monospace;
+        }
+    </style>
+</head>
+<body>
+    <h1>🔍 Vendor API Debugger</h1>
+    
+    <div>
+        <h3>Current Token:</h3>
+        <input type="text" id="tokenDisplay" readonly>
+        <button onclick="copyToken()">📋 Copy Token</button>
+        <button onclick="clearToken()">🗑️ Clear Token</button>
+    </div>
+    
+    <hr>
+    
+    <h3>Test Endpoints:</h3>
+    <button onclick="testVendorOrders()">🍔 Test /api/vendor/orders</button>
+    <button onclick="testVendorItems()">📦 Test /api/vendor/items</button>
+    <button onclick="testAuth()">🔐 Test Authentication</button>
+    <button onclick="location.reload()">🔄 Reload Page</button>
+    
+    <div id="output" class="output"></div>
+    
+    <script>
+        const token = localStorage.getItem('vitato_token');
+        const output = document.getElementById('output');
+        const tokenDisplay = document.getElementById('tokenDisplay');
+        
+        tokenDisplay.value = token || 'NO TOKEN FOUND';
+        
+        function log(msg, isError = false) {
+            const timestamp = new Date().toLocaleTimeString();
+            const className = isError ? 'error' : 'success';
+            output.innerHTML += `<div class="${className}">[${timestamp}] ${msg}</div>`;
+            output.scrollTop = output.scrollHeight;
+        }
+        
+        function copyToken() {
+            if (token) {
+                navigator.clipboard.writeText(token);
+                log('✓ Token copied to clipboard');
+            } else {
+                log('✗ No token to copy', true);
+            }
+        }
+        
+        function clearToken() {
+            localStorage.removeItem('vitato_token');
+            log('✓ Token cleared. Reload page to see effect.');
+        }
+        
+        async function testAuth() {
+            log('Testing authentication...');
+            if (!token) {
+                log('✗ No token found in localStorage', true);
+                return;
+            }
+            
+            log(`Token length: ${token.length} characters`);
+            log(`Token preview: ${token.substring(0, 50)}...`);
+            
+            try {
+                const res = await fetch('/api/auth/me', {
+                    headers: { Authorization: 'Bearer ' + token }
+                });
+                
+                log(`Status: ${res.status} ${res.statusText}`);
+                
+                if (res.ok) {
+                    const data = await res.json();
+                    log('✓ Authentication successful!');
+                    log(JSON.stringify(data, null, 2));
+                } else {
+                    const errorText = await res.text();
+                    log(`✗ Authentication failed: ${errorText}`, true);
+                }
+            } catch (err) {
+                log(`✗ Error: ${err.message}`, true);
+            }
+        }
+        
+        async function testVendorOrders() {
+            log('Testing /api/vendor/orders...');
+            if (!token) {
+                log('✗ No token found in localStorage', true);
+                return;
+            }
+            
+            try {
+                const res = await fetch('/api/vendor/orders', {
+                    headers: { Authorization: 'Bearer ' + token }
+                });
+                
+                log(`Status: ${res.status} ${res.statusText}`);
+                
+                if (res.ok) {
+                    const orders = await res.json();
+                    log(`✓ Successfully fetched ${orders.length} orders`);
+                    log(JSON.stringify(orders, null, 2));
+                } else {
+                    const errorText = await res.text();
+                    log(`✗ Request failed: ${errorText}`, true);
+                }
+            } catch (err) {
+                log(`✗ Error: ${err.message}`, true);
+            }
+        }
+        
+        async function testVendorItems() {
+            log('Testing /api/vendor/items...');
+            if (!token) {
+                log('✗ No token found in localStorage', true);
+                return;
+            }
+            
+            try {
+                const res = await fetch('/api/vendor/items', {
+                    headers: { Authorization: 'Bearer ' + token }
+                });
+                
+                log(`Status: ${res.status} ${res.statusText}`);
+                
+                if (res.ok) {
+                    const items = await res.json();
+                    log(`✓ Successfully fetched ${items.length} menu items`);
+                    log(JSON.stringify(items, null, 2));
+                } else {
+                    const errorText = await res.text();
+                    log(`✗ Request failed: ${errorText}`, true);
+                }
+            } catch (err) {
+                log(`✗ Error: ${err.message}`, true);
+            }
+        }
+        
+        // Auto-test on load
+        log('=== Vendor API Debugger Loaded ===');
+        log(`Token present: ${token ? 'YES' : 'NO'}`);
+        if (token) {
+            log('Running automatic tests...');
+            setTimeout(testAuth, 500);
+            setTimeout(testVendorOrders, 1500);
+        } else {
+            log('⚠️ Please login first at /index.html', true);
+        }
+    </script>
+</body>
+</html>

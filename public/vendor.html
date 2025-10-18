@@ -1,82 +1,410 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Vendor Dashboard - VITato</title><link rel="stylesheet" href="/css/tailwind.css"><style>body{font-family:Inter,system-ui,sans-serif;background:#FAFAFA;color:#333}.gradient-header{background:linear-gradient(90deg,#FFD54F,#f7c63a);} .card{background:#fff;border:1px solid #eee;border-radius:10px;padding:16px;}body{opacity:1;transition:opacity .16s ease,transform .24s cubic-bezier(.4,0,.2,1);}body.page-enter{opacity:0;transform:translateY(4px);}body.page-enter-active{opacity:1;transform:translateY(0);}body.page-exit{opacity:0;transform:translateY(-4px);} </style></head><body class="min-h-screen flex flex-col">
-<header class="gradient-header text-gray-900 py-4 px-6 flex justify-between items-center sticky top-0 shadow-sm"><h1 class="font-semibold">Vendor Panel</h1><nav class="flex items-center space-x-4 text-sm"><a href="/vendor.html" class="underline">Dashboard</a><button id="logoutBtn">Logout</button></nav></header>
-<main class="flex-1 px-6 py-6 max-w-7xl mx-auto">
-  <div class="mb-6 flex flex-wrap gap-2" id="vendorTabs">
-    <button data-vtab="overview" class="vtabBtn bg-yellow-400 text-gray-900 px-4 py-2 rounded-md text-sm font-medium shadow">Overview</button>
-    <button data-vtab="menu" class="vtabBtn bg-white border border-gray-300 px-4 py-2 rounded-md text-sm">Menu</button>
-    <button data-vtab="orders" class="vtabBtn bg-white border border-gray-300 px-4 py-2 rounded-md text-sm">Orders</button>
-  <button data-vtab="history" class="vtabBtn bg-white border border-gray-300 px-4 py-2 rounded-md text-sm">History</button>
-    <button data-vtab="settings" class="vtabBtn bg-white border border-gray-300 px-4 py-2 rounded-md text-sm">Settings</button>
-  </div>
-  <div id="vendorPanels" class="space-y-10">
-    <section data-vpanel="overview" class="vpanel">
-      <h2 class="text-lg font-semibold mb-4">Today Summary</h2>
-      <div id="vendorSummary" class="grid md:grid-cols-4 gap-4"></div>
-    </section>
-    <section data-vpanel="menu" class="vpanel hidden">
-      <div class="flex justify-between items-center mb-4"><h2 class="text-lg font-semibold">Menu Items</h2><button id="addItemBtn" class="bg-yellow-400 hover:bg-yellow-300 text-gray-900 text-sm px-3 py-1.5 rounded-md">Add Item</button></div>
-      <div id="vendorItems" class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3"></div>
-    </section>
-    <section data-vpanel="orders" class="vpanel hidden">
-      <h2 class="text-lg font-semibold mb-4">Orders</h2>
-      <div id="vendorOrders" class="space-y-3 text-sm"></div>
-    </section>
-    <section data-vpanel="history" class="vpanel hidden">
-      <h2 class="text-lg font-semibold mb-4">Delivered (Recent)</h2>
-      <div id="vendorHistory" class="space-y-3 text-sm"></div>
-    </section>
-    <section data-vpanel="settings" class="vpanel hidden">
-      <h2 class="text-lg font-semibold mb-4">Settings</h2>
-      <p class="text-xs text-gray-600">(Future) Manage vendor details.</p>
-    </section>
-  </div>
-</main>
-<!-- Modal -->
-<div id="itemModal" class="fixed inset-0 bg-black/30 backdrop-blur-sm hidden items-center justify-center p-4">
-  <div class="bg-white rounded-lg shadow-lg w-full max-w-md p-6 relative">
-    <button id="closeModal" class="absolute top-2 right-2 text-gray-500 hover:text-gray-700">✕</button>
-    <h3 id="modalTitle" class="text-lg font-semibold mb-4">New Item</h3>
-    <form id="itemForm" class="space-y-4 text-sm">
-      <input type="hidden" name="id" />
-      <div>
-        <label class="block font-medium mb-1">Name</label>
-        <input name="name" required class="w-full border-gray-300 rounded-md" />
-      </div>
-      <div class="grid grid-cols-2 gap-4">
-        <div>
-          <label class="block font-medium mb-1">Price (₹)</label>
-          <input name="price" type="number" min="1" step="1" required class="w-full border-gray-300 rounded-md" />
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Vendor Dashboard - VITato</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      body { font-family: 'Inter', sans-serif; }
+      
+      /* Sidebar animations */
+      .vtabBtn { transition: all 0.2s ease; position: relative; }
+      .vtabBtn.active { background: #FFD54F; color: #1f2937; font-weight: 600; box-shadow: 0 2px 8px rgba(255, 213, 79, 0.3); }
+      .vtabBtn.active::before { content: ''; position: absolute; left: 0; top: 50%; transform: translateY(-50%); width: 4px; height: 60%; background: #1f2937; border-radius: 0 4px 4px 0; }
+      .vtabBtn:not(.active):hover { background: #FFFBF0; }
+      
+      /* Card improvements */
+      .card { background: white; border: 1px solid #f3f4f6; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); transition: all 0.2s ease; }
+      .card:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.08); transform: translateY(-2px); }
+      
+      /* Stats card */
+      .stat-card { background: white; border: 1px solid #f3f4f6; border-radius: 12px; padding: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); transition: all 0.2s ease; position: relative; overflow: hidden; }
+      .stat-card:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.08); transform: translateY(-2px); }
+      .stat-card::before { content: ''; position: absolute; top: 0; left: 0; width: 4px; height: 100%; background: #FFD54F; }
+      .stat-value { font-size: 32px; font-weight: 800; color: #1f2937; margin: 8px 0; }
+      .stat-label { font-size: 12px; color: #6b7280; font-weight: 500; text-transform: uppercase; letter-spacing: 0.5px; }
+      
+      /* Menu card grid */
+      .menu-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 20px; }
+      .menu-item-card { background: white; border-radius: 12px; overflow: hidden; border: 1px solid #f3f4f6; transition: all 0.2s ease; }
+      .menu-item-card:hover { box-shadow: 0 8px 20px rgba(0,0,0,0.1); transform: translateY(-4px); }
+      .menu-item-card img { width: 100%; height: 160px; object-fit: cover; transition: transform 0.3s ease; }
+      .menu-item-card:hover img { transform: scale(1.05); }
+      
+      /* Order card */
+      .order-card { background: white; border: 1px solid #e5e7eb; border-radius: 10px; padding: 16px; transition: all 0.2s ease; }
+      .order-card:hover { border-color: #FFD54F; box-shadow: 0 4px 12px rgba(255, 213, 79, 0.15); }
+      .order-card.new-order { animation: pulse 2s ease-in-out; border: 2px solid #FFD54F; }
+      
+      @keyframes pulse {
+        0%, 100% { box-shadow: 0 0 0 0 rgba(255, 213, 79, 0.7); }
+        50% { box-shadow: 0 0 0 10px rgba(255, 213, 79, 0); }
+      }
+      
+      /* Status badges */
+      .status-badge { display: inline-block; padding: 6px 12px; border-radius: 20px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
+      .status-placed { background: #FEF3C7; color: #92400E; }
+      .status-cooking { background: #DBEAFE; color: #1E40AF; }
+      .status-ready { background: #D1FAE5; color: #065F46; }
+      .status-delivered { background: #DCFCE7; color: #166534; }
+      
+      /* Toggle switch */
+      .toggle-switch { position: relative; display: inline-block; width: 52px; height: 28px; }
+      .toggle-switch input { opacity: 0; width: 0; height: 0; }
+      .toggle-slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #d1d5db; transition: .3s; border-radius: 28px; }
+      .toggle-slider:before { position: absolute; content: ""; height: 22px; width: 22px; left: 3px; bottom: 3px; background-color: white; transition: .3s; border-radius: 50%; }
+      .toggle-switch input:checked + .toggle-slider { background-color: #10B981; }
+      .toggle-switch input:checked + .toggle-slider:before { transform: translateX(24px); }
+      
+      /* Button styles */
+      .btn { padding: 10px 20px; border-radius: 8px; font-weight: 600; font-size: 14px; border: none; cursor: pointer; transition: all 0.2s ease; display: inline-flex; align-items: center; gap: 8px; }
+      .btn-primary { background: #FFD54F; color: #333; }
+      .btn-primary:hover { background: #f7c63a; transform: translateY(-1px); box-shadow: 0 4px 12px rgba(255, 213, 79, 0.3); }
+      .btn-secondary { background: white; color: #374151; border: 1px solid #e5e7eb; }
+      .btn-secondary:hover { background: #f9fafb; border-color: #d1d5db; }
+      .btn-danger { background: #EF4444; color: white; }
+      .btn-danger:hover { background: #DC2626; }
+      .btn-success { background: #10B981; color: white; }
+      .btn-success:hover { background: #059669; }
+      .btn-sm { padding: 6px 14px; font-size: 13px; }
+      
+      /* Modal */
+      .modal-backdrop { z-index: 60; backdrop-filter: blur(4px); }
+      .modal-content { animation: slideUp 0.3s ease; }
+      @keyframes slideUp {
+        from { opacity: 0; transform: translateY(20px); }
+        to { opacity: 1; transform: translateY(0); }
+      }
+      
+      /* Empty state */
+      .empty-state { text-align: center; padding: 60px 20px; color: #9ca3af; }
+      .empty-state svg { width: 64px; height: 64px; margin: 0 auto 16px; opacity: 0.3; }
+      
+      /* Responsive */
+      @media (max-width: 768px) {
+        .menu-grid { grid-template-columns: 1fr; }
+        .stat-value { font-size: 24px; }
+      }
+    </style>
+  </head>
+  <body class="min-h-screen bg-gray-50 text-slate-800">
+    <div class="flex h-full min-h-screen">
+      <!-- Sidebar -->
+      <aside id="sidebar" class="w-72 bg-white border-r border-gray-200 fixed h-full hidden md:block shadow-sm">
+        <div class="p-6 border-b border-gray-100">
+          <div class="flex items-center gap-3">
+            <img src="/images/VITato.png" alt="logo" class="w-10 h-10 rounded-md shadow-sm" />
+            <div>
+              <div class="text-lg font-bold text-gray-900">VITato</div>
+              <div class="text-xs text-gray-500">Vendor Dashboard</div>
+            </div>
+          </div>
         </div>
-        <div>
-          <label class="block font-medium mb-1">Category</label>
-          <input name="category" class="w-full border-gray-300 rounded-md" />
+        
+        <nav class="p-4">
+          <div class="space-y-2">
+            <button data-vtab="overview" class="vtabBtn active w-full text-left px-4 py-3 rounded-lg flex items-center gap-3 text-sm">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path>
+              </svg>
+              <span>Overview</span>
+            </button>
+            <button data-vtab="menu" class="vtabBtn w-full text-left px-4 py-3 rounded-lg flex items-center gap-3 text-sm">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path>
+              </svg>
+              <span>Menu</span>
+            </button>
+            <button data-vtab="orders" class="vtabBtn w-full text-left px-4 py-3 rounded-lg flex items-center gap-3 text-sm">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
+              </svg>
+              <span>Orders</span>
+            </button>
+            <button data-vtab="history" class="vtabBtn w-full text-left px-4 py-3 rounded-lg flex items-center gap-3 text-sm">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+              </svg>
+              <span>History</span>
+            </button>
+            <button data-vtab="settings" class="vtabBtn w-full text-left px-4 py-3 rounded-lg flex items-center gap-3 text-sm">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+              </svg>
+              <span>Settings</span>
+            </button>
+          </div>
+        </nav>
+        
+        <div class="absolute bottom-0 w-full p-4 border-t border-gray-100">
+          <button id="logoutBtn" class="w-full text-sm text-gray-700 bg-gray-50 hover:bg-gray-100 rounded-md py-2 font-medium transition">
+            Logout
+          </button>
         </div>
+      </aside>
+
+      <!-- Main content -->
+      <div class="flex-1 md:ml-72">
+        <!-- Top bar -->
+        <header class="sticky top-0 z-40 bg-white border-b border-gray-200 shadow-sm">
+          <div class="flex items-center justify-between px-6 py-4">
+            <div class="flex items-center gap-4">
+              <button id="sidebarToggle" class="md:hidden p-2 rounded-md hover:bg-gray-100">
+                <svg class="h-6 w-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
+                </svg>
+              </button>
+              <div>
+                <h1 class="text-xl font-bold text-gray-900" id="pageTitle">Overview</h1>
+                <p class="text-sm text-gray-500" id="pageSubtitle">Welcome back!</p>
+              </div>
+            </div>
+            
+            <div class="flex items-center gap-4">
+              <button class="p-2 rounded-full hover:bg-gray-100 relative">
+                <svg class="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path>
+                </svg>
+                <span class="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
+              </button>
+              
+              <div class="relative">
+                <button id="profileBtn" class="flex items-center gap-2 rounded-lg hover:bg-gray-100 px-3 py-2">
+                  <img src="/images/VITato.png" alt="profile" class="w-8 h-8 rounded-full" />
+                  <div class="text-left hidden sm:block">
+                    <div class="text-sm font-semibold text-gray-900">Vendor</div>
+                    <div class="text-xs text-gray-500">vendor@example.com</div>
+                  </div>
+                  <svg class="h-4 w-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                  </svg>
+                </button>
+                <div id="profileMenu" class="hidden absolute right-0 mt-2 w-48 bg-white border border-gray-100 rounded-lg shadow-lg py-2">
+                  <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">Profile</a>
+                  <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">Settings</a>
+                  <hr class="my-2">
+                  <button id="logoutBtnTop" class="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-50">Logout</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </header>
+
+        <!-- Content area -->
+        <main class="p-6">
+          <!-- Overview Panel -->
+          <div data-vpanel="overview" class="vpanel">
+            <div class="mb-6">
+              <h2 class="text-2xl font-bold text-gray-900 mb-2">Today's Summary</h2>
+              <p class="text-gray-600">Overview of your business performance</p>
+            </div>
+            <div id="vendorSummary" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8"></div>
+            
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <div class="card p-6">
+                <h3 class="text-lg font-semibold mb-4 text-gray-900">Recent Activity</h3>
+                <div class="space-y-4" id="recentActivity">
+                  <div class="flex items-center gap-4 text-sm">
+                    <div class="w-2 h-2 bg-green-500 rounded-full"></div>
+                    <div class="flex-1">
+                      <div class="font-medium text-gray-900">New order received</div>
+                      <div class="text-gray-500 text-xs">2 minutes ago</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+              <div class="card p-6">
+                <h3 class="text-lg font-semibold mb-4 text-gray-900">Quick Actions</h3>
+                <div class="space-y-3">
+                  <button onclick="switchVendorTab('menu')" class="w-full btn btn-primary">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                    </svg>
+                    Add New Menu Item
+                  </button>
+                  <button onclick="switchVendorTab('orders')" class="w-full btn btn-secondary">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
+                    </svg>
+                    View Orders
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Menu Panel -->
+          <div data-vpanel="menu" class="vpanel hidden">
+            <div class="flex items-center justify-between mb-6">
+              <div>
+                <h2 class="text-2xl font-bold text-gray-900 mb-2">Menu Items</h2>
+                <p class="text-gray-600">Manage your food items and availability</p>
+              </div>
+              <button id="addItemBtn" class="btn btn-primary">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                </svg>
+                Add Item
+              </button>
+            </div>
+            <div id="vendorItems" class="menu-grid"></div>
+          </div>
+
+          <!-- Orders Panel -->
+          <div data-vpanel="orders" class="vpanel hidden">
+            <div class="mb-6">
+              <h2 class="text-2xl font-bold text-gray-900 mb-2">Active Orders</h2>
+              <p class="text-gray-600">Manage and track your orders</p>
+            </div>
+            <div id="vendorOrders" class="space-y-4"></div>
+          </div>
+
+          <!-- History Panel -->
+          <div data-vpanel="history" class="vpanel hidden">
+            <div class="mb-6">
+              <h2 class="text-2xl font-bold text-gray-900 mb-2">Order History</h2>
+              <p class="text-gray-600">View your completed orders</p>
+            </div>
+            <div id="vendorHistory" class="space-y-3"></div>
+          </div>
+
+          <!-- Settings Panel -->
+          <div data-vpanel="settings" class="vpanel hidden">
+            <div class="mb-6">
+              <h2 class="text-2xl font-bold text-gray-900 mb-2">Settings</h2>
+              <p class="text-gray-600">Manage your account and preferences</p>
+            </div>
+            <div class="card p-6">
+              <p class="text-sm text-gray-600">Settings features coming soon...</p>
+            </div>
+          </div>
+        </main>
       </div>
-      <div>
-        <label class="block font-medium mb-1">Image URL</label>
-        <input name="image" placeholder="https://" class="w-full border-gray-300 rounded-md" />
+    </div>
+
+    <!-- Add/Edit Item Modal -->
+    <div id="itemModal" class="modal-backdrop fixed inset-0 bg-black/40 hidden items-center justify-center p-4">
+      <div class="modal-content bg-white w-full max-w-xl mx-auto rounded-2xl shadow-2xl p-6 relative">
+        <button id="closeModal" class="absolute top-4 right-4 text-gray-500 hover:text-gray-700 text-2xl font-bold">&times;</button>
+        <h3 id="modalTitle" class="text-2xl font-bold mb-6 text-gray-900">New Menu Item</h3>
+        <form id="itemForm" class="space-y-4">
+          <input type="hidden" name="id" />
+          <div class="grid grid-cols-2 gap-4">
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">Item Name *</label>
+              <input name="name" required class="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-yellow-400 focus:border-transparent" placeholder="e.g., Masala Dosa" />
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">Price (₹) *</label>
+              <input name="price" type="number" min="1" step="1" required class="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-yellow-400 focus:border-transparent" placeholder="50" />
+            </div>
+          </div>
+          <div class="grid grid-cols-2 gap-4">
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">Category</label>
+              <input name="category" list="categoryList" class="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-yellow-400 focus:border-transparent" placeholder="e.g., South Indian" />
+              <datalist id="categoryList"></datalist>
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">Image URL</label>
+              <input name="image" placeholder="https://..." class="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-yellow-400 focus:border-transparent" />
+            </div>
+          </div>
+          <div class="flex items-center gap-4">
+            <label class="toggle-switch">
+              <input id="inStockChk" type="checkbox" name="inStock" checked />
+              <span class="toggle-slider"></span>
+            </label>
+            <label for="inStockChk" class="text-sm font-medium text-gray-700">In Stock</label>
+            <p id="itemFormMsg" class="text-xs text-red-500 ml-auto"></p>
+          </div>
+          <div class="flex justify-between items-center pt-4">
+            <button type="button" id="deleteItemBtn" class="hidden btn btn-danger btn-sm">Delete Item</button>
+            <div class="flex gap-3">
+              <button type="button" onclick="closeItemModal()" class="btn btn-secondary">Cancel</button>
+              <button type="submit" class="btn btn-primary">Save Item</button>
+            </div>
+          </div>
+        </form>
       </div>
-      <div class="flex items-center space-x-2">
-        <input id="inStockChk" type="checkbox" name="inStock" class="rounded" checked />
-        <label for="inStockChk" class="text-sm">In Stock</label>
+    </div>
+
+    <!-- Order Detail Modal -->
+    <div id="vendorOrderModal" class="fixed inset-0 bg-black/30 hidden items-center justify-center p-4 z-50">
+      <div class="modal-content bg-white rounded-2xl shadow-2xl w-full max-w-md p-6 relative">
+        <button id="vendorOrderModalClose" class="absolute top-4 right-4 text-gray-500 hover:text-gray-700 text-2xl font-bold">&times;</button>
+        <h3 class="text-xl font-bold mb-4 text-gray-900">Order Details</h3>
+        <div id="vendorOrderDetail" class="space-y-4"></div>
       </div>
-      <div class="flex justify-end space-x-3 pt-2">
-        <button type="button" id="deleteItemBtn" class="hidden text-red-600 text-xs">Delete</button>
-        <button type="submit" class="bg-yellow-400 hover:bg-yellow-300 text-gray-900 font-medium px-4 py-2 rounded-md">Save</button>
-      </div>
-      <p id="itemFormMsg" class="text-xs text-red-500"></p>
-    </form>
-  </div>
-</div>
-<script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
-<script src="/js/transitions.js"></script>
-<script src="/js/auth.js"></script>
-<script src="/js/vendor.js"></script>
-<div id="vendorOrderModal" class="fixed inset-0 bg-black/30 backdrop-blur-sm hidden items-center justify-center p-4">
-  <div class="bg-white rounded-lg shadow-lg w-full max-w-md p-6 relative text-sm">
-    <button id="vendorOrderModalClose" class="absolute top-2 right-2 text-gray-500 hover:text-gray-700">✕</button>
-    <h3 class="text-lg font-semibold mb-3">Order Detail</h3>
-    <div id="vendorOrderDetail" class="space-y-3"></div>
-  </div>
-</div>
-</body></html>
+    </div>
+
+    <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
+    <script src="/js/transitions.js"></script>
+    <script src="/js/auth.js"></script>
+    <script src="/js/vendor.js"></script>
+
+    <script>
+      // UI enhancements
+      const sidebar = document.getElementById('sidebar');
+      const toggle = document.getElementById('sidebarToggle');
+      const profileBtn = document.getElementById('profileBtn');
+      const profileMenu = document.getElementById('profileMenu');
+      const pageTitle = document.getElementById('pageTitle');
+      const pageSubtitle = document.getElementById('pageSubtitle');
+
+      toggle?.addEventListener('click', () => sidebar?.classList.toggle('hidden'));
+      profileBtn?.addEventListener('click', (e) => {
+        e.stopPropagation();
+        profileMenu?.classList.toggle('hidden');
+      });
+      document.addEventListener('click', () => profileMenu?.classList.add('hidden'));
+
+      // Tab switching with title update
+      window.switchVendorTab = function(name) {
+        document.querySelectorAll('.vtabBtn').forEach(btn => {
+          btn.classList.toggle('active', btn.getAttribute('data-vtab') === name);
+        });
+        document.querySelectorAll('.vpanel').forEach(panel => {
+          panel.classList.toggle('hidden', panel.getAttribute('data-vpanel') !== name);
+        });
+        
+        // Update page title
+        const titles = {
+          overview: { title: 'Overview', subtitle: 'Welcome back!' },
+          menu: { title: 'Menu Items', subtitle: 'Manage your food items' },
+          orders: { title: 'Active Orders', subtitle: 'Track and manage orders' },
+          history: { title: 'Order History', subtitle: 'View completed orders' },
+          settings: { title: 'Settings', subtitle: 'Account preferences' }
+        };
+        if (titles[name]) {
+          pageTitle.textContent = titles[name].title;
+          pageSubtitle.textContent = titles[name].subtitle;
+        }
+      };
+
+      // Modal helpers
+      window.closeItemModal = function() {
+        document.getElementById('itemModal')?.classList.add('hidden');
+      };
+
+      // Logout handlers
+      document.getElementById('logoutBtn')?.addEventListener('click', () => {
+        if (confirm('Are you sure you want to logout?')) {
+          localStorage.removeItem('vitato_token');
+          window.location.href = '/';
+        }
+      });
+      document.getElementById('logoutBtnTop')?.addEventListener('click', () => {
+        if (confirm('Are you sure you want to logout?')) {
+          localStorage.removeItem('vitato_token');
+          window.location.href = '/';
+        }
+      });
+    </script>
+  </body>
+</html>

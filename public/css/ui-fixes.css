@@ -1,0 +1,37 @@
+/* UI fixes and small visual polish (keeps Tailwind utilities but adds some custom enhancements) */
+:root{
+  --brand-yellow:#FFD54F;
+  --brand-yellow-600:#f7c63a;
+  --muted:#6b7280;
+}
+body{font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,"Noto Sans",sans-serif;}
+/* Nav */
+nav { backdrop-filter: saturate(120%) blur(6px); }
+nav a, nav button { transition: all .18s ease; }
+/* Buttons */
+.btn-primary { background:var(--brand-yellow); color:#1f2937; box-shadow:0 6px 18px rgba(250,204,21,0.12); }
+.btn-primary:hover { background:var(--brand-yellow-600); transform:translateY(-1px); }
+.rounded-lg-soft { border-radius:14px; }
+/* Cards */
+.card, .vendor .card, .orderCard, .menu-card { background: #ffffff; border:1px solid #f3f4f6; border-radius:12px; box-shadow: 0 6px 20px rgba(15,23,42,0.04); }
+.menu-card img { transition: transform .35s ease; }
+.menu-card:hover img { transform: scale(1.04); }
+.menu-card .meta { color:var(--muted); font-size:13px; }
+/* Badges */
+.status-badge, .badge, .statusBadge { font-weight:600; font-size:11px; padding:4px 8px; border-radius:9999px; }
+.status-badge.paid { background:#ECFDF5; color:#065f46; }
+.status-badge.pending { background:#FFFBEB; color:#92400e; }
+/* Modal tweaks */
+.modal-inner { border-radius:12px; box-shadow: 0 20px 40px rgba(2,6,23,0.08); }
+/* Inputs */
+input[type='text'], input[type='email'], input[type='number'], select { transition:box-shadow .15s ease, transform .12s ease; }
+input:focus, select:focus, textarea:focus { box-shadow: 0 6px 18px rgba(250,204,21,0.12); transform: translateY(-1px); }
+/* Small helpers */
+.muted { color:var(--muted); }
+.card-grid { display:grid; gap:1rem; grid-template-columns: repeat(auto-fill,minmax(220px,1fr)); }
+.footer-note { color:#9CA3AF; font-size:13px; }
+
+/* Responsive tweaks */
+@media (min-width:1024px){
+  .max-w-6xl { max-width:1100px; }
+}

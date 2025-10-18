@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+  <meta http-equiv="Pragma" content="no-cache" />
+  <meta http-equiv="Expires" content="0" />
+  <title>Check Application Status - VITato</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/tailwind.css" />
+  <style>
+    body { font-family: 'Inter', sans-serif; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
+    .status-pending { background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%); }
+    .status-approved { background: linear-gradient(135deg, #10b981 0%, #059669 100%); }
+    .status-rejected { background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); }
+  </style>
+</head>
+<body class="flex items-center justify-center min-h-full p-4">
+  <div class="w-full max-w-md bg-white rounded-2xl shadow-2xl p-8">
+    <div class="text-center mb-8">
+      <div class="w-16 h-16 bg-gradient-to-br from-purple-500 to-indigo-600 rounded-full flex items-center justify-center mx-auto mb-4">
+        <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"></path>
+        </svg>
+      </div>
+      <h1 class="text-3xl font-bold text-gray-900 mb-2">Check Application Status</h1>
+      <p class="text-gray-600">Enter your application number to track your vendor application</p>
+    </div>
+
+    <div id="searchForm" class="space-y-6">
+      <form id="statusForm" class="space-y-4">
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-2">Application Number</label>
+          <input 
+            type="text" 
+            id="appNumberInput" 
+            required 
+            pattern="VITVENDOR2025[0-9]{4}"
+            placeholder="e.g., VITVENDOR20250001" 
+            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-center text-lg font-mono tracking-wider" 
+          />
+          <p class="mt-2 text-xs text-gray-500 text-center">Format: VITVENDOR2025XXXX</p>
+        </div>
+
+        <button 
+          type="submit" 
+          style="width: 100%; background: linear-gradient(135deg, #7c3aed 0%, #4f46e5 100%); color: white; font-weight: 600; padding: 12px; border-radius: 8px; border: none; cursor: pointer; transition: all 0.3s; box-shadow: 0 2px 4px rgba(0,0,0,0.1);"
+        >
+          Check Status
+        </button>
+      </form>
+
+      <div class="text-center">
+        <a href="/" class="text-sm text-gray-600 hover:text-gray-900 transition-colors">
+          ← Back to Home
+        </a>
+      </div>
+    </div>
+
+    <div id="statusResult" class="hidden space-y-6">
+      <div id="statusCard" class="rounded-xl p-6 text-white shadow-lg">
+        <div class="flex items-center justify-between mb-4">
+          <h3 class="text-lg font-semibold">Application Status</h3>
+          <span id="statusBadge" class="px-3 py-1 rounded-full text-sm font-medium bg-white/20 backdrop-blur-sm"></span>
+        </div>
+        
+        <div class="space-y-3 text-white/90">
+          <div class="flex justify-between text-sm">
+            <span>Application Number:</span>
+            <span id="displayAppNumber" class="font-mono font-semibold"></span>
+          </div>
+          <div class="flex justify-between text-sm">
+            <span>Business Name:</span>
+            <span id="displayBusinessName" class="font-semibold"></span>
+          </div>
+          <div class="flex justify-between text-sm">
+            <span>Submitted On:</span>
+            <span id="displaySubmittedDate" class="font-semibold"></span>
+          </div>
+          <div id="processedDateContainer" class="flex justify-between text-sm hidden">
+            <span id="processedDateLabel">Processed On:</span>
+            <span id="displayProcessedDate" class="font-semibold"></span>
+          </div>
+        </div>
+
+        <div id="messageContainer" class="mt-4 pt-4 border-t border-white/20">
+          <p id="statusMessage" class="text-sm text-white/90"></p>
+        </div>
+
+        <div id="credentialsContainer" class="hidden mt-4 pt-4 border-t border-white/20 space-y-2">
+          <p class="text-sm font-semibold mb-2">Your Vendor Credentials:</p>
+          <div class="bg-white/10 rounded-lg p-3 space-y-1 text-sm">
+            <div class="flex justify-between">
+              <span>Vendor ID:</span>
+              <span id="vendorId" class="font-mono font-semibold"></span>
+            </div>
+            <div class="flex justify-between">
+              <span>Email:</span>
+              <span id="vendorEmail" class="font-semibold"></span>
+            </div>
+            <div class="flex justify-between">
+              <span>Password:</span>
+              <span id="vendorPassword" class="font-mono font-semibold"></span>
+            </div>
+          </div>
+          <p class="text-xs text-white/70 mt-2">⚠️ Please save these credentials securely. You'll need them to login.</p>
+        </div>
+      </div>
+
+      <div class="flex gap-3">
+        <button 
+          onclick="checkAnother()" 
+          style="flex: 1; padding: 12px 16px; border: 2px solid #d1d5db; border-radius: 8px; color: #374151; background: white; font-weight: 500; cursor: pointer; transition: all 0.3s;"
+        >
+          Check Another
+        </button>
+        <a 
+          href="/" 
+          style="flex: 1; padding: 12px 16px; background: linear-gradient(135deg, #7c3aed 0%, #4f46e5 100%); color: white; font-weight: 500; border-radius: 8px; text-align: center; text-decoration: none; transition: all 0.3s;"
+        >
+          Back to Home
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <script src="/js/toast.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      const form = document.getElementById('statusForm');
+      const searchForm = document.getElementById('searchForm');
+      const statusResult = document.getElementById('statusResult');
+      const statusCard = document.getElementById('statusCard');
+
+      form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const appNumber = document.getElementById('appNumberInput').value.trim().toUpperCase();
+        
+        if (!appNumber) {
+        toast.warning('Please enter an application number');
+        return;
+      }
+
+      console.log('Checking status for:', appNumber); // Debug
+      toast.info('Checking application status...');
+
+      try {
+        const response = await fetch(`/api/vendor-applications/status/${appNumber}`);
+        console.log('Response status:', response.status); // Debug
+        
+        if (!response.ok) {
+          if (response.status === 404) {
+            toast.error('Application not found. Please check your application number.');
+          } else {
+            toast.error('Error checking status. Please try again.');
+          }
+          return;
+        }
+
+        const data = await response.json();
+        console.log('Received data:', data); // Debug
+        displayStatus(data);
+      } catch (error) {
+        console.error('Error:', error);
+        toast.error('Network error. Please check your connection and try again.');
+      }
+    });
+
+    function displayStatus(data) {
+      console.log('Displaying status:', data); // Debug log
+      
+      // Hide search form, show result
+      searchForm.classList.add('hidden');
+      statusResult.classList.remove('hidden');
+
+      // Set status-specific styling
+      statusCard.className = 'rounded-xl p-6 text-white shadow-lg';
+      if (data.status === 'pending') {
+        statusCard.classList.add('status-pending');
+        toast.info('Application is pending review');
+      } else if (data.status === 'approved') {
+        statusCard.classList.add('status-approved');
+        toast.success('Application approved!');
+      } else if (data.status === 'rejected') {
+        statusCard.classList.add('status-rejected');
+        toast.warning('Application was rejected');
+      }
+
+      // Display basic info
+      document.getElementById('statusBadge').textContent = data.status.toUpperCase();
+      document.getElementById('displayAppNumber').textContent = data.applicationNumber;
+      document.getElementById('displayBusinessName').textContent = data.businessName;
+      document.getElementById('displaySubmittedDate').textContent = new Date(data.submittedAt).toLocaleDateString('en-IN', {
+        day: 'numeric',
+        month: 'short',
+        year: 'numeric'
+      });
+
+      // Show processed date if available
+      if (data.processedAt) {
+        document.getElementById('processedDateContainer').classList.remove('hidden');
+        const label = data.status === 'approved' ? 'Approved On:' : 'Rejected On:';
+        document.getElementById('processedDateLabel').textContent = label;
+        document.getElementById('displayProcessedDate').textContent = new Date(data.processedAt).toLocaleDateString('en-IN', {
+          day: 'numeric',
+          month: 'short',
+          year: 'numeric'
+        });
+      } else {
+        document.getElementById('processedDateContainer').classList.add('hidden');
+      }
+
+      // Display status message
+      let message = '';
+      if (data.status === 'pending') {
+        message = '⏳ Your application is under review. We will notify you once it has been processed.';
+      } else if (data.status === 'approved') {
+        message = '🎉 Congratulations! Your application has been approved. You can now login as a vendor using the credentials below.';
+      } else if (data.status === 'rejected') {
+        message = data.rejectionReason ? `❌ Reason: ${data.rejectionReason}` : '❌ Your application has been rejected. Please contact admin for more details.';
+      }
+      document.getElementById('statusMessage').textContent = message;
+
+      // Show credentials ONLY if approved and credentials exist
+      const credentialsContainer = document.getElementById('credentialsContainer');
+      if (data.status === 'approved' && data.credentials) {
+        console.log('Showing credentials:', data.credentials); // Debug log
+        credentialsContainer.classList.remove('hidden');
+        document.getElementById('vendorId').textContent = data.credentials.vendorId || 'N/A';
+        document.getElementById('vendorEmail').textContent = data.credentials.email || 'N/A';
+        document.getElementById('vendorPassword').textContent = data.credentials.password || 'N/A';
+      } else {
+        console.log('Hiding credentials - Status:', data.status, 'Has credentials:', !!data.credentials);
+        credentialsContainer.classList.add('hidden');
+      }
+    }
+
+    // Make checkAnother globally accessible
+    window.checkAnother = function() {
+      searchForm.classList.remove('hidden');
+      statusResult.classList.add('hidden');
+      document.getElementById('statusForm').reset();
+    };
+
+    }); // End DOMContentLoaded
+  </script>
+</body>
+</html>
