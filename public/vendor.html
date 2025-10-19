@@ -260,6 +260,12 @@
             <div class="mb-6">
               <h2 class="text-2xl font-bold text-gray-900 mb-2">Active Orders</h2>
               <p class="text-gray-600">Manage and track your orders</p>
+              <div class="mt-3 flex items-center justify-between">
+                <div id="failedOrdersBanner" class="hidden text-xs px-3 py-2 rounded-md border border-red-200 bg-red-50 text-red-700">
+                  Recently failed payments will auto-remove after 3 minutes.
+                </div>
+                <button id="filterFailedToggle" class="text-xs px-3 py-1.5 rounded-md border border-gray-300 hover:bg-gray-50">Show Failed Only</button>
+              </div>
             </div>
             <div id="vendorOrders" class="space-y-4"></div>
           </div>
@@ -279,8 +285,39 @@
               <h2 class="text-2xl font-bold text-gray-900 mb-2">Settings</h2>
               <p class="text-gray-600">Manage your account and preferences</p>
             </div>
-            <div class="card p-6">
-              <p class="text-sm text-gray-600">Settings features coming soon...</p>
+            <div class="card p-6 space-y-4">
+              <h3 class="text-lg font-semibold text-gray-900">Notifications</h3>
+              <div class="flex items-center justify-between">
+                <div>
+                  <div class="font-medium text-gray-800">Enable toasts</div>
+                  <div class="text-xs text-gray-500">Show pop-up notifications for events</div>
+                </div>
+                <label class="toggle-switch">
+                  <input id="toastEnabled" type="checkbox" />
+                  <span class="toggle-slider"></span>
+                </label>
+              </div>
+              <div class="flex items-center justify-between">
+                <div>
+                  <div class="font-medium text-gray-800">Play sound</div>
+                  <div class="text-xs text-gray-500">Play a short sound when showing a toast</div>
+                </div>
+                <label class="toggle-switch">
+                  <input id="toastSound" type="checkbox" />
+                  <span class="toggle-slider"></span>
+                </label>
+              </div>
+              <div class="flex items-center justify-between">
+                <div>
+                  <div class="font-medium text-gray-800">Duration</div>
+                  <div class="text-xs text-gray-500">How long toasts stay visible (ms)</div>
+                </div>
+                <input id="toastDuration" type="number" min="1000" max="15000" step="500" class="w-32 border border-gray-300 rounded-lg p-2 text-sm" />
+              </div>
+              <div class="pt-2">
+                <button id="toastSave" class="btn btn-primary btn-sm">Save</button>
+                <button id="toastTest" class="btn btn-secondary btn-sm">Test toast</button>
+              </div>
             </div>
           </div>
         </main>
@@ -346,6 +383,7 @@
     <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
     <script src="/js/transitions.js"></script>
     <script src="/js/auth.js"></script>
+  <script src="/js/toast.js"></script>
     <script src="/js/vendor.js"></script>
 
     <script>
@@ -405,6 +443,30 @@
           window.location.href = '/';
         }
       });
+
+      // Toast settings wiring (vendor)
+      try {
+        const enabledEl = document.getElementById('toastEnabled');
+        const soundEl = document.getElementById('toastSound');
+        const durEl = document.getElementById('toastDuration');
+        const saveBtn = document.getElementById('toastSave');
+        const testBtn = document.getElementById('toastTest');
+        if (window.toast && enabledEl && soundEl && durEl) {
+          // Initialize from stored config
+          window.toast.loadConfig && window.toast.loadConfig();
+          enabledEl.checked = !!window.toast.enabled;
+          soundEl.checked = !!window.toast.sound;
+          durEl.value = window.toast.defaultDuration || 3500;
+          saveBtn?.addEventListener('click', () => {
+            const duration = Math.max(1000, Math.min(15000, parseInt(durEl.value || '3500', 10)));
+            window.toast.setConfig({ enabled: enabledEl.checked, sound: soundEl.checked, duration });
+            window.toast.success('Saved toast preferences');
+          });
+          testBtn?.addEventListener('click', () => {
+            window.toast.info('This is a test toast');
+          });
+        }
+      } catch {}
     </script>
   </body>
 </html>

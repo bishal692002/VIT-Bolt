@@ -2,6 +2,10 @@
 class Toast {
   constructor() {
     this.container = null;
+    this.enabled = true;
+    this.sound = false;
+    this.defaultDuration = 3500;
+    this._audioCtx = null;
     this.init();
   }
 
@@ -24,9 +28,41 @@ class Toast {
     } else {
       this.container = document.getElementById('toast-container');
     }
+    this.loadConfig();
   }
 
-  show(message, type = 'info', duration = 4000) {
+  loadConfig() {
+    try {
+      const enabled = localStorage.getItem('toast:enabled');
+      const sound = localStorage.getItem('toast:sound');
+      const duration = localStorage.getItem('toast:duration');
+      if (enabled !== null) this.enabled = enabled === '1';
+      if (sound !== null) this.sound = sound === '1';
+      if (duration !== null) {
+        const d = parseInt(duration, 10);
+        if (!isNaN(d) && d >= 1000 && d <= 15000) this.defaultDuration = d;
+      }
+    } catch {}
+  }
+
+  saveConfig() {
+    try {
+      localStorage.setItem('toast:enabled', this.enabled ? '1' : '0');
+      localStorage.setItem('toast:sound', this.sound ? '1' : '0');
+      localStorage.setItem('toast:duration', String(this.defaultDuration));
+    } catch {}
+  }
+
+  setConfig({ enabled, sound, duration } = {}) {
+    if (typeof enabled === 'boolean') this.enabled = enabled;
+    if (typeof sound === 'boolean') this.sound = sound;
+    if (typeof duration === 'number' && duration >= 1000 && duration <= 15000) this.defaultDuration = duration;
+    this.saveConfig();
+  }
+
+  show(message, type = 'info', duration) {
+    if (!this.enabled) return null;
+    const finalDuration = typeof duration === 'number' ? duration : this.defaultDuration;
     const toast = document.createElement('div');
     toast.className = 'toast-notification';
     
@@ -140,8 +176,13 @@ class Toast {
     this.container.appendChild(toast);
 
     // Auto remove after duration
-    if (duration > 0) {
-      setTimeout(() => this.remove(toast), duration);
+    if (finalDuration > 0) {
+      setTimeout(() => this.remove(toast), finalDuration);
+    }
+
+    // Optional sound
+    if (this.sound) {
+      this.playSound();
     }
 
     return toast;
@@ -170,6 +211,25 @@ class Toast {
 
   info(message, duration) {
     return this.show(message, 'info', duration);
+  }
+
+  playSound() {
+    try {
+      const AudioCtx = window.AudioContext || window.webkitAudioContext;
+      if (!AudioCtx) return;
+      if (!this._audioCtx) this._audioCtx = new AudioCtx();
+      const ctx = this._audioCtx;
+      const o = ctx.createOscillator();
+      const g = ctx.createGain();
+      o.type = 'sine';
+      o.frequency.value = 880; // A5
+      g.gain.setValueAtTime(0.0001, ctx.currentTime);
+      g.gain.exponentialRampToValueAtTime(0.2, ctx.currentTime + 0.01);
+      g.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.25);
+      o.connect(g).connect(ctx.destination);
+      o.start();
+      o.stop(ctx.currentTime + 0.26);
+    } catch {}
   }
 }
 

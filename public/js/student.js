@@ -42,14 +42,20 @@
       <div class='font-medium flex justify-between'><span>#${o._id.substring(0,6)}</span><span>₹${o.total}</span></div>
       <div class='flex justify-between'><span class='uppercase tracking-wide ${o.status==='delivered'?'text-green-600':'text-yellow-600'}'>${o.status}</span><a href='/track.html?order=${o._id}' class='text-yellow-600 underline'>Track</a></div>
     </div>`).join('') || '<p class="text-xs text-gray-500">No orders yet</p>';
-    // Active
-    const active = orders.find(o=> !['delivered','out_for_delivery'].includes(o.status));
+    // Active: include out_for_delivery as active until delivered
+    const active = orders.find(o=> o.status !== 'delivered');
     if(active){
-      activeOrderEl.innerHTML = `<div class='bg-white border border-gray-100 rounded-md p-4 text-xs'>
-        <div class='font-semibold mb-1'>Order #${active._id.substring(0,6)}</div>
+      const statusClass = active.status === 'delivered' ? 'text-green-600' : active.status === 'out_for_delivery' ? 'text-blue-600' : 'text-yellow-600';
+      activeOrderEl.innerHTML = `<div class='bg-white border border-gray-100 rounded-md p-4 text-xs' data-oid='${active._id}'>
+        <div class='flex items-center justify-between mb-1'>
+          <div class='font-semibold'>Order #${active._id.substring(0,6)}</div>
+          <span class='status-chip uppercase tracking-wide ${statusClass}'>${active.status}</span>
+        </div>
         <div class='mb-2 text-gray-500'>Total ₹${active.total}</div>
         <a class='text-yellow-600 underline' href='/track.html?order=${active._id}'>View full tracking</a>
       </div>`;
+    } else {
+      activeOrderEl.innerHTML = 'No active order.';
     }
     // History full
     orderHistoryEl.innerHTML = orders.map(o=> `<div class='bg-white border border-gray-100 rounded-md p-3 text-xs flex justify-between items-center'>
@@ -145,9 +151,16 @@
       }
       
       // Update active order if it matches
-      if(activeOrderEl.innerHTML.includes(orderId.substring(0,6))) {
-        if(newStatus === 'delivered' || newStatus === 'out_for_delivery') {
-          // Order is no longer "active" - reload active section only
+      const activeCard = activeOrderEl.querySelector(`[data-oid='${orderId}']`);
+      if (activeCard) {
+        const chip = activeCard.querySelector('.status-chip');
+        if (chip) {
+          chip.textContent = newStatus;
+          const color = newStatus === 'delivered' ? 'text-green-600' : newStatus === 'out_for_delivery' ? 'text-blue-600' : 'text-yellow-600';
+          chip.className = `status-chip uppercase tracking-wide ${color}`;
+        }
+        if(newStatus === 'delivered') {
+          // No longer active
           setTimeout(() => loadOrders(), 100);
         }
       }
@@ -157,12 +170,15 @@
     };
     
     const showToast = (message) => {
+      if (window.toast && typeof window.toast.info === 'function') {
+        window.toast.info(message, 3500);
+        return;
+      }
       const toast = document.createElement('div');
       toast.className = 'fixed top-4 right-4 bg-green-500 text-white px-4 py-2 rounded-md shadow-lg z-50 transform transition-all duration-300';
       toast.textContent = message;
       toast.style.transform = 'translateX(100%)';
       document.body.appendChild(toast);
-      
       setTimeout(() => toast.style.transform = 'translateX(0)', 100);
       setTimeout(() => {
         toast.style.transform = 'translateX(100%)';
@@ -187,6 +203,12 @@
     socket.on('orders_updated', () => {
       console.log('Received orders_updated - doing full refresh');
       fullRefresh();
+    });
+    // Backup: rider claim event -> set out_for_delivery
+    socket.on('order_claimed', (data) => {
+      try {
+        if (data?.orderId) updateOrderStatus(data.orderId, 'out_for_delivery');
+      } catch {}
     });
     
     socket.on('new_order', () => {

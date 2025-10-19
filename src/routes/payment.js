@@ -129,6 +129,17 @@ router.post('/webhook', express.raw({ type: 'application/json' }), async (req, r
           await order.save();
           const io = req.app.get('io');
           io?.to(order.user.toString()).emit('order_payment_failed', { orderId: order._id.toString() });
+          try {
+            await order.populate({ path: 'items.food', populate: { path: 'vendor', select: '_id' } });
+            const vendorIds = Array.from(new Set(order.items.map(i => i.food?.vendor?._id?.toString()).filter(Boolean)));
+            if (vendorIds.length) {
+              vendorIds.forEach(vId => io?.to(`vendor_${vId}`).emit('orders_updated'));
+            } else {
+              io?.emit('orders_updated');
+            }
+          } catch (e) {
+            io?.emit('orders_updated');
+          }
         }
       }
     }

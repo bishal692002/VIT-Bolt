@@ -1,32 +1,89 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Rider Dashboard - VITato</title><link rel="stylesheet" href="/css/tailwind.css"><link rel="stylesheet" href="/css/ui-fixes.css"><style>body{font-family:Inter,system-ui,sans-serif;background:#FAFAFA;color:#333}.gradient-header{background:linear-gradient(90deg,#FFD54F,#f7c63a);} .badge{padding:2px 6px;border-radius:12px;font-size:10px}body{opacity:1;transition:opacity .16s ease,transform .24s cubic-bezier(.4,0,.2,1);}body.page-enter{opacity:0;transform:translateY(4px);}body.page-enter-active{opacity:1;transform:translateY(0);}body.page-exit{opacity:0;transform:translateY(-4px);} </style></head><body class="min-h-screen flex flex-col">
-<header class="gradient-header text-gray-900 py-4 px-6 flex justify-between items-center sticky top-0 shadow-sm"><h1 class="font-semibold">Delivery Rider</h1><nav class="flex items-center space-x-4 text-sm"><a href="/rider.html" class="underline">Dashboard</a><button id="logoutBtn">Logout</button></nav></header>
-<main class="flex-1 px-6 py-6 max-w-6xl mx-auto">
-  <div class="mb-6 flex flex-wrap gap-2" id="riderTabs">
-  <button data-rtab="orders" class="rtabBtn bg-yellow-400 text-gray-900 px-4 py-2 rounded-md text-sm font-medium shadow">Orders</button>
-  <button data-rtab="stats" class="rtabBtn bg-white border border-gray-300 px-4 py-2 rounded-md text-sm">Stats</button>
-  <button data-rtab="history" class="rtabBtn bg-white border border-gray-300 px-4 py-2 rounded-md text-sm">History</button>
-  </div>
-  <div id="riderPanels" class="space-y-10">
-    <section data-rpanel="orders" class="rpanel">
-      <h2 class="text-lg font-semibold mb-3">Available Orders</h2>
-      <div id="availableOrders" class="space-y-3 text-sm mb-8"></div>
-      <h2 class="text-lg font-semibold mb-3">My Active Deliveries</h2>
-      <div id="myDeliveries" class="space-y-3 text-sm"></div>
-    </section>
-    <section data-rpanel="stats" class="rpanel hidden">
-      <h2 class="text-lg font-semibold mb-4">Today Stats</h2>
-      <div id="riderStats" class="grid md:grid-cols-4 gap-4"></div>
-    </section>
-    <section data-rpanel="history" class="rpanel hidden">
-      <h2 class="text-lg font-semibold mb-4">Delivered (Recent)</h2>
-      <div id="riderHistory" class="space-y-3 text-sm"></div>
-    </section>
-  </div>
-</main>
+<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Rider Dashboard - VITato</title><script src="https://cdn.tailwindcss.com"></script><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet"><style>body{font-family:Inter,system-ui,sans-serif;background:#F9FAFB;color:#111827}.tabBtn,.rtabBtn{transition:all .2s ease}.rtabBtn.bg-yellow-400{box-shadow:0 2px 8px rgba(255,213,79,.3);font-weight:600}.card{background:#fff;border:1px solid #f3f4f6;border-radius:12px;box-shadow:0 1px 3px rgba(0,0,0,.05);transition:all .2s ease}.card:hover{box-shadow:0 4px 12px rgba(0,0,0,.08);transform:translateY(-2px)}.empty-state{border:1px dashed #e5e7eb;border-radius:12px;padding:24px;text-align:center;color:#6b7280} .toggle-switch{position:relative;display:inline-block;width:52px;height:28px} .toggle-switch input{opacity:0;width:0;height:0} .toggle-slider{position:absolute;cursor:pointer;top:0;left:0;right:0;bottom:0;background-color:#d1d5db;transition:.3s;border-radius:28px} .toggle-slider:before{position:absolute;content:"";height:22px;width:22px;left:3px;bottom:3px;background-color:#fff;transition:.3s;border-radius:50%} .toggle-switch input:checked + .toggle-slider{background-color:#10B981} .toggle-switch input:checked + .toggle-slider:before{transform:translateX(24px)}</style></head><body class="min-h-screen bg-gray-50">
+<div class="flex min-h-screen">
+  <aside class="hidden md:block w-72 bg-white border-r border-gray-200">
+    <div class="p-6 border-b border-gray-100">
+      <div class="flex items-center gap-3">
+        <img src="/images/VITato.png" alt="logo" class="w-10 h-10 rounded-md shadow-sm"/>
+        <div>
+          <div class="text-lg font-bold text-gray-900">VITato</div>
+          <div class="text-xs text-gray-500">Rider Dashboard</div>
+        </div>
+      </div>
+    </div>
+    <nav class="p-4">
+      <div id="riderTabs" class="space-y-2">
+        <button data-rtab="orders" class="rtabBtn bg-yellow-400 text-gray-900 w-full text-left px-4 py-3 rounded-lg text-sm font-medium">Orders</button>
+        <button data-rtab="stats" class="rtabBtn bg-white border border-gray-300 w-full text-left px-4 py-3 rounded-lg text-sm">Stats</button>
+        <button data-rtab="history" class="rtabBtn bg-white border border-gray-300 w-full text-left px-4 py-3 rounded-lg text-sm">History</button>
+      </div>
+    </nav>
+    <div class="absolute bottom-0 w-72 p-4 border-t border-gray-100">
+      <button id="logoutBtn" class="w-full text-sm text-gray-700 bg-gray-50 hover:bg-gray-100 rounded-md py-2 font-medium transition">Logout</button>
+    </div>
+  </aside>
+  <main class="flex-1 p-6">
+    <header class="mb-6">
+      <h1 class="text-2xl font-extrabold text-gray-900">Delivery Rider</h1>
+      <p class="text-sm text-gray-500">Claim orders and track your deliveries</p>
+    </header>
+    <div id="riderPanels" class="space-y-8">
+      <section data-rpanel="orders" class="rpanel">
+        <div class="card p-6 mb-6">
+          <h2 class="text-lg font-semibold mb-3">Available Orders</h2>
+          <div id="availableOrders" class="space-y-3 text-sm"></div>
+        </div>
+        <div class="card p-6">
+          <h2 class="text-lg font-semibold mb-3">My Active Deliveries</h2>
+          <div id="myDeliveries" class="space-y-3 text-sm"></div>
+        </div>
+      </section>
+      <section data-rpanel="stats" class="rpanel hidden">
+        <div class="card p-6">
+          <h2 class="text-lg font-semibold mb-4">Today Stats</h2>
+          <div id="riderStats" class="grid md:grid-cols-4 gap-4"></div>
+        </div>
+        <div class="card p-6 mt-6 space-y-4">
+          <h3 class="text-lg font-semibold text-gray-900">Notifications</h3>
+          <div class="flex items-center justify-between">
+            <div>
+              <div class="font-medium text-gray-800">Enable toasts</div>
+              <div class="text-xs text-gray-500">Show pop-up notifications for events</div>
+            </div>
+            <label class="toggle-switch"><input id="toastEnabled" type="checkbox" /><span class="toggle-slider"></span></label>
+          </div>
+          <div class="flex items-center justify-between">
+            <div>
+              <div class="font-medium text-gray-800">Play sound</div>
+              <div class="text-xs text-gray-500">Play a short sound when showing a toast</div>
+            </div>
+            <label class="toggle-switch"><input id="toastSound" type="checkbox" /><span class="toggle-slider"></span></label>
+          </div>
+          <div class="flex items-center justify-between">
+            <div>
+              <div class="font-medium text-gray-800">Duration</div>
+              <div class="text-xs text-gray-500">How long toasts stay visible (ms)</div>
+            </div>
+            <input id="toastDuration" type="number" min="1000" max="15000" step="500" class="w-32 border border-gray-300 rounded-lg p-2 text-sm" />
+          </div>
+          <div class="pt-2">
+            <button id="toastSave" class="text-xs bg-yellow-400 hover:bg-yellow-300 text-gray-900 px-3 py-1.5 rounded">Save</button>
+            <button id="toastTest" class="text-xs border border-gray-300 px-3 py-1.5 rounded">Test toast</button>
+          </div>
+        </div>
+      </section>
+      <section data-rpanel="history" class="rpanel hidden">
+        <div class="card p-6">
+          <h2 class="text-lg font-semibold mb-4">Delivered (Recent)</h2>
+          <div id="riderHistory" class="space-y-3 text-sm"></div>
+        </div>
+      </section>
+    </div>
+  </main>
+</div>
 <!-- Detail Modal -->
 <div id="riderOrderModal" class="fixed inset-0 bg-black/30 backdrop-blur-sm hidden items-center justify-center p-4">
-  <div class="bg-white rounded-lg shadow-lg w-full max-w-md p-6 relative text-sm">
-    <button id="riderOrderModalClose" class="absolute top-2 right-2 text-gray-500 hover:text-gray-700">✕</button>
+  <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md p-6 relative text-sm">
+    <button id="riderOrderModalClose" class="absolute top-2 right-2 text-gray-500 hover:text-gray-700 text-2xl font-bold">✕</button>
     <h3 class="text-lg font-semibold mb-3">Order Detail</h3>
     <div id="riderOrderDetail" class="space-y-3"></div>
   </div>
@@ -34,5 +91,30 @@
 <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
 <script src="/js/transitions.js"></script>
 <script src="/js/auth.js"></script>
+<script src="/js/toast.js"></script>
 <script src="/js/rider.js"></script>
+<script>
+  // Toast settings wiring (rider)
+  (function(){
+    try {
+      const enabledEl = document.getElementById('toastEnabled');
+      const soundEl = document.getElementById('toastSound');
+      const durEl = document.getElementById('toastDuration');
+      const saveBtn = document.getElementById('toastSave');
+      const testBtn = document.getElementById('toastTest');
+      if (window.toast && enabledEl && soundEl && durEl) {
+        window.toast.loadConfig && window.toast.loadConfig();
+        enabledEl.checked = !!window.toast.enabled;
+        soundEl.checked = !!window.toast.sound;
+        durEl.value = window.toast.defaultDuration || 3500;
+        saveBtn?.addEventListener('click', () => {
+          const duration = Math.max(1000, Math.min(15000, parseInt(durEl.value || '3500', 10)));
+          window.toast.setConfig({ enabled: enabledEl.checked, sound: soundEl.checked, duration });
+          window.toast.success('Saved toast preferences');
+        });
+        testBtn?.addEventListener('click', () => window.toast.info('This is a test toast'));
+      }
+    } catch {}
+  })();
+</script>
 </body></html>

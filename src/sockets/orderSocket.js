@@ -1,5 +1,6 @@
 import { Server } from 'socket.io';
 import Order from '../models/Order.js';
+import Vendor from '../models/Vendor.js';
 import jwt from 'jsonwebtoken';
 
 export default function orderSocket(httpServer) {

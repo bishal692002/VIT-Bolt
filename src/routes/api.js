@@ -173,7 +173,15 @@ router.get('/vendor/orders', ensureAuth, requireRole('vendor'), ensureVendorCont
   if(!vendorId) return res.status(403).json({ error: 'Vendor not found' });
   const vendorFoodIds = await FoodItem.find({ vendor: vendorId }).distinct('_id');
   if(!vendorFoodIds.length) return res.json([]);
-  const orders = await Order.find({ 'items.food': { $in: vendorFoodIds } })
+  // Exclude failed payments older than 3 minutes (show briefly, then auto-disappear)
+  const cutoff = new Date(Date.now() - 3 * 60 * 1000);
+  const orders = await Order.find({
+      'items.food': { $in: vendorFoodIds },
+      $or: [
+        { 'payment.status': { $ne: 'failed' } },
+        { $and: [ { 'payment.status': 'failed' }, { updatedAt: { $gte: cutoff } } ] }
+      ]
+    })
     .sort({ createdAt: -1 })
     .limit(100)
     .populate({ path: 'items.food', select: 'name price vendor', populate: { path: 'vendor', select: 'name' } })
@@ -238,6 +246,7 @@ router.post('/rider/orders/:id/claim', ensureAuth, requireRole('delivery'), asyn
   io.emit('orders_updated');
   io.emit('order_claimed', { orderId: order._id.toString(), riderId: req.user.id });
   io.to(order.user.toString()).emit('order_status', { orderId: order._id.toString(), status: order.status });
+  io.to(`order_${order._id.toString()}`).emit('order_status', { orderId: order._id.toString(), status: order.status });
   res.json(order);
 });
 router.post('/rider/orders/:id/delivered', ensureAuth, requireRole('delivery'), async (req, res) => {
@@ -246,6 +255,7 @@ router.post('/rider/orders/:id/delivered', ensureAuth, requireRole('delivery'), 
   const io = req.app.get('io');
   io.emit('orders_updated');
   io.to(order.user.toString()).emit('order_status', { orderId: order._id.toString(), status: order.status });
+  io.to(`order_${order._id.toString()}`).emit('order_status', { orderId: order._id.toString(), status: order.status });
   res.json(order);
 });
 

@@ -24,6 +24,10 @@
   const itemsContainer = document.getElementById('vendorItems');
   const ordersContainer = document.getElementById('vendorOrders');
   const historyContainer = document.getElementById('vendorHistory');
+  const failedBanner = document.getElementById('failedOrdersBanner');
+  const failedFilterBtn = document.getElementById('filterFailedToggle');
+  let showFailedOnly = false;
+  let failedCountdownTimer = null;
   // Track last known statuses to highlight changes between refreshes
   let prevStatuses = {};
   const addBtn = document.getElementById('addItemBtn');
@@ -116,7 +120,7 @@
       ordersContainer.innerHTML = '<div class="empty-state"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path></svg><div>Unable to load orders</div></div>'; 
       return; 
     }
-    const orders = await res.json();
+  const orders = await res.json();
     console.log('✅ Successfully fetched orders:', orders.length);
     console.log('Orders data:', JSON.stringify(orders, null, 2));
     
@@ -124,7 +128,8 @@
       const todayStart = new Date(); todayStart.setHours(0,0,0,0);
       const today = orders.filter(o=> new Date(o.createdAt) >= todayStart);
       const totalOrders = today.length;
-      const revenue = today.reduce((s,o)=> s + (o.payment?.status==='paid'? o.total:0),0);
+      // Earnings logic: count only delivered AND paid orders
+      const revenue = today.reduce((s,o)=> s + ((o.payment?.status==='paid' && o.status==='delivered')? o.total:0),0);
       const preparing = today.filter(o=> o.status==='cooking').length;
       const ready = today.filter(o=> o.status==='ready').length;
       
@@ -146,8 +151,12 @@
       `).join('');
     }
     
-    const nextStatuses = {};
-    const activeOrders = orders.filter(o=> o.status !== 'delivered');
+  const nextStatuses = {};
+  // Separate failed payments still within 3 minutes window
+  const now = Date.now();
+  const failedRecent = orders.filter(o => o.payment?.status === 'failed');
+  const activeOrdersAll = orders.filter(o=> o.status !== 'delivered');
+  const activeOrders = showFailedOnly ? failedRecent : activeOrdersAll;
     const delivered = orders.filter(o=> o.status === 'delivered');
     
     console.log('📊 Order filtering results:');
@@ -157,23 +166,25 @@
     console.log('  Active order statuses:', activeOrders.map(o => o.status));
     console.log('  Active order IDs:', activeOrders.map(o => o._id));
     
-    if (activeOrders.length === 0) {
+  if (activeOrders.length === 0) {
       console.log('⚠️ No active orders - showing empty state');
       ordersContainer.innerHTML = '<div class="empty-state"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path></svg><div>No active orders</div></div>';
     } else {
       console.log('✅ Rendering', activeOrders.length, 'active orders');
-      ordersContainer.innerHTML = activeOrders.map(o=> {
+  ordersContainer.innerHTML = activeOrders.map(o=> {
         console.log('  🍔 Rendering order:', o._id, '| status:', o.status, '| payment:', o.payment?.status, '| total:', o.total);
         nextStatuses[o._id] = o.status;
         const changed = !prevStatuses[o._id] || prevStatuses[o._id] !== o.status;
         const itemsCount = o.items?.length || 0;
         const totalQty = o.items?.reduce((s,it)=> s + (it.quantity||0),0) || 0;
-        const paid = o.payment?.status === 'paid';
+  const paid = o.payment?.status === 'paid';
+  const failed = o.payment?.status === 'failed';
         
-        let statusClass = 'status-placed';
+  let statusClass = 'status-placed';
         let statusText = 'Placed';
         if (o.status === 'cooking') { statusClass = 'status-cooking'; statusText = 'Cooking'; }
         if (o.status === 'ready') { statusClass = 'status-ready'; statusText = 'Ready'; }
+  if (o.status === 'delivered') { statusClass = 'status-delivered'; statusText = 'Delivered'; }
         
         return `
           <div class='order-card ${changed? 'new-order':''}' data-oid='${o._id}'>
@@ -181,7 +192,7 @@
               <div>
                 <span class='text-lg font-bold text-gray-900 cursor-pointer hover:text-yellow-600' data-detail='${o._id}'>#${o._id.substring(0,8)}</span>
                 <div class='text-xs text-gray-500 mt-1'>
-                  <span class='${paid? 'text-green-600':'text-red-600'} font-medium'>${paid? '● Paid':'● Payment Pending'}</span>
+                  <span class='${failed? 'text-red-600' : paid? 'text-green-600':'text-yellow-600'} font-medium'>${failed? '● Payment Failed' : paid? '● Paid':'● Payment Pending'}</span>
                   <span class='mx-2'>•</span>
                   <span>${itemsCount} items (${totalQty} qty)</span>
                 </div>
@@ -193,12 +204,15 @@
               <div class='text-sm'>
                 <div class='text-gray-900 font-medium'>${o.user?.name || 'Customer'}</div>
                 <div class='text-xs text-gray-500'>${new Date(o.createdAt).toLocaleTimeString()}</div>
+                ${failed ? `<div class='mt-1 inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full bg-red-100 text-red-700' data-failed-countdown='${o.updatedAt || o.createdAt}'>
+                  ⏳ <span class='time'>--:--</span> left
+                </div>` : ''}
               </div>
               <div class='text-xl font-bold text-gray-900'>₹${o.total}</div>
             </div>
             
             <div class='mt-4 flex gap-2'>
-              ${o.status==='placed'? `<button class="orderAction btn ${paid ? 'btn-primary' : 'btn-secondary'} btn-sm" data-next="cooking" ${!paid ? 'disabled title="Waiting for payment"' : ''}>Start Cooking</button>`:''}
+              ${o.status==='placed'? `<button class="orderAction btn ${paid ? 'btn-primary' : 'btn-secondary'} btn-sm" data-next="cooking" ${(!paid || failed) ? 'disabled title="Waiting for payment"' : ''}>Start Cooking</button>`:''}
               ${o.status==='cooking'? '<button class="orderAction btn btn-success btn-sm" data-next="ready">Mark Ready</button>':''}
               ${o.status==='ready'? '<span class="text-xs text-green-600 font-semibold">✓ Ready for rider pickup</span>':''}
               <button class='ml-auto text-xs font-semibold text-gray-600 hover:text-gray-900' data-detail='${o._id}'>View Details →</button>
@@ -242,6 +256,44 @@
     prevStatuses = nextStatuses;
     ordersContainer.querySelectorAll('[data-detail]')?.forEach(el=> el.onclick = ()=> openOrderDetail(el.getAttribute('data-detail')));
     historyContainer?.querySelectorAll('[data-detail]')?.forEach(el=> el.onclick = ()=> openOrderDetail(el.getAttribute('data-detail')));
+
+    // Update failed banner and start countdowns
+    try {
+      if (failedBanner) {
+        const failedCount = failedRecent.length;
+        failedBanner.classList.toggle('hidden', failedCount === 0);
+        if (failedCount > 0) {
+          failedBanner.textContent = `${failedCount} failed payment${failedCount>1?'s':''} will auto-remove after 3 minutes.`;
+        }
+      }
+      // Clear previous timer
+      if (failedCountdownTimer) {
+        clearInterval(failedCountdownTimer);
+        failedCountdownTimer = null;
+      }
+      const chips = Array.from(ordersContainer.querySelectorAll('[data-failed-countdown]'));
+      if (chips.length) {
+        const update = () => {
+          const nowMs = Date.now();
+          chips.forEach(ch => {
+            const ts = Date.parse(ch.getAttribute('data-failed-countdown'));
+            const remaining = (ts + 3*60*1000) - nowMs;
+            const span = ch.querySelector('.time');
+            if (remaining <= 0) {
+              span && (span.textContent = '00:00');
+              // Will be removed on next fetch via server filter; optionally hide visually
+              ch.closest('.order-card')?.classList.add('opacity-50');
+            } else {
+              const mm = Math.floor(remaining/60000);
+              const ss = Math.floor((remaining%60000)/1000);
+              span && (span.textContent = `${String(mm).padStart(2,'0')}:${String(ss).padStart(2,'0')}`);
+            }
+          });
+        };
+        update();
+        failedCountdownTimer = setInterval(update, 1000);
+      }
+    } catch {}
   }
 
   function openModal(edit=false, data=null){
@@ -455,12 +507,16 @@
   });
   
   function showVendorNotification(message) {
+    if (window.toast && typeof window.toast.success === 'function') {
+      window.toast.success(message, 3500);
+      return;
+    }
+    // Fallback if toast.js not loaded
     const notification = document.createElement('div');
-    notification.className = 'fixed top-4 right-4 bg-green-500 text-white px-4 py-2 rounded-md shadow-lg z-50 transform transition-all duration-300';
+    notification.className = 'fixed top-4 right-4 bg-green-500 text-white px-4 py-2 rounded-md shadow-lg z-[1000] transform transition-all duration-300';
     notification.textContent = message;
     notification.style.transform = 'translateY(-100%)';
     document.body.appendChild(notification);
-    
     setTimeout(() => notification.style.transform = 'translateY(0)', 100);
     setTimeout(() => {
       notification.style.transform = 'translateY(-100%)';
@@ -551,10 +607,33 @@
     console.log('Auto-refreshing orders...');
     fetchOrders();
   }, 30000);
+
+  // Optional client-side cleanup: visually remove failed orders older than 3 minutes between refreshes
+  setInterval(() => {
+    try {
+      const cards = ordersContainer?.querySelectorAll('.order-card');
+      cards?.forEach(card => {
+        const badge = card.querySelector('.text-red-600');
+        if (badge && badge.textContent && /Payment Failed/i.test(badge.textContent)) {
+          const timeEl = card.querySelector('.text-xs.text-gray-500');
+          const timeText = timeEl?.textContent || '';
+          // We can’t reliably parse relative time; rely on server refresh primarily.
+          // Keep this as a visual best-effort if needed in future.
+        }
+      });
+    } catch {}
+  }, 20000);
   
   // Auto-refresh menu every 60 seconds
   setInterval(() => {
     console.log('Auto-refreshing menu...');
     fetchMenu();
   }, 60000);
+
+  // Failed-only filter toggle
+  failedFilterBtn?.addEventListener('click', () => {
+    showFailedOnly = !showFailedOnly;
+    failedFilterBtn.textContent = showFailedOnly ? 'Show All' : 'Show Failed Only';
+    fetchOrders();
+  });
 })();

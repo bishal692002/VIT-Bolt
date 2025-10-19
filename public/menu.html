@@ -16,14 +16,17 @@
   body.page-exit{opacity:0;transform:translateY(-4px);} </style>
 </head>
 <body class="min-h-full flex flex-col">
-  <nav class="w-full bg-white border-b border-gray-200 px-4 py-3 flex items-center justify-between">
-    <a href="/" class="font-bold text-lg">VITato</a>
-    <div class="flex items-center space-x-4">
+  <nav class="w-full bg-white border-b border-gray-200 px-4 py-3 flex items-center justify-between sticky top-0 z-30">
+    <a href="/student.html" class="font-bold text-lg">VITato</a>
+    <div class="flex items-center space-x-4 text-sm">
+      <a href="/student.html" class="underline">Dashboard</a>
+      <a href="/menu.html">Menu</a>
+      <a href="/track.html">Track</a>
       <a href="/cart.html" class="relative">
-        <span class="font-medium">Cart</span>
+        <span>Cart</span>
         <span id="cartCount" class="absolute -top-2 -right-3 text-xs bg-yellow-400 text-gray-800 rounded-full px-1.5 py-0.5">0</span>
       </a>
-      <button id="logoutBtn" class="text-sm text-gray-600">Logout</button>
+      <button id="logoutBtn" class="text-gray-700">Logout</button>
     </div>
   </nav>
   <main class="flex-1 max-w-6xl mx-auto w-full px-5 py-8">
