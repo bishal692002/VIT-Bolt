@@ -27,6 +27,8 @@
   const failedBanner = document.getElementById('failedOrdersBanner');
   const failedFilterBtn = document.getElementById('filterFailedToggle');
   let showFailedOnly = false;
+  // Cache current vendor id for item-scoped revenue calculations
+  let currentVendorId = null;
   let failedCountdownTimer = null;
   // Track last known statuses to highlight changes between refreshes
   let prevStatuses = {};
@@ -128,8 +130,21 @@
       const todayStart = new Date(); todayStart.setHours(0,0,0,0);
       const today = orders.filter(o=> new Date(o.createdAt) >= todayStart);
       const totalOrders = today.length;
-      // Earnings logic: count only delivered AND paid orders
-      const revenue = today.reduce((s,o)=> s + ((o.payment?.status==='paid' && o.status==='delivered')? o.total:0),0);
+      // Earnings logic: count only delivered AND paid orders; vendor revenue excludes delivery fee and only includes this vendor's items
+      const revenue = today.reduce((sum, o) => {
+        if (!(o.payment?.status === 'paid' && o.status === 'delivered')) return sum;
+        // Prefer precise per-item attribution when we know the current vendor id
+        if (currentVendorId && Array.isArray(o.items)) {
+          const ownItemsTotal = o.items.reduce((s, it) => {
+            const vId = it?.food?.vendor?._id || it?.food?.vendor?.id || it?.food?.vendor;
+            return s + (vId && vId.toString() === currentVendorId ? (Number(it.price)||0) * (Number(it.quantity)||0) : 0);
+          }, 0);
+          return sum + ownItemsTotal;
+        }
+        // Fallback approximation: assume single-vendor order, subtract delivery fee
+        const approx = (Number(o.total)||0) - (Number(o.deliveryFee)||0);
+        return sum + (approx > 0 ? approx : 0);
+      }, 0);
       const preparing = today.filter(o=> o.status==='cooking').length;
       const ready = today.filter(o=> o.status==='ready').length;
       
@@ -597,8 +612,18 @@
   console.log('=== VENDOR DASHBOARD INITIALIZATION ===');
   fetchMenu();
   console.log('Called fetchMenu()');
-  fetchOrders();
-  console.log('Called fetchOrders()');
+  // Load vendor identity for accurate revenue attribution; don't block initial orders render
+  (async () => {
+    try {
+      const res = await fetch('/api/vendor/me', { headers: { Authorization: 'Bearer ' + token } });
+      if (res.ok) {
+        const me = await res.json();
+        currentVendorId = me?.vendorId || me?.vendor?._id || null;
+      }
+    } catch {}
+    fetchOrders();
+    console.log('Called fetchOrders()');
+  })();
   switchVendorTab('overview');
   console.log('Switched to overview tab');
   

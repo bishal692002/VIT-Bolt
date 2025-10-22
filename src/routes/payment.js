@@ -31,9 +31,10 @@ router.post('/create-order', ensureAuth, async (req, res) => {
       if(!f) throw new Error('Item not found');
       return { food: f._id, quantity: i.quantity, price: f.price };
     });
-    const subtotal = orderItems.reduce((s,i)=> s + i.price * i.quantity, 0);
-    const deliveryFee = subtotal < 200 ? 15 : 10;
-    const total = subtotal + deliveryFee;
+  const subtotal = orderItems.reduce((s,i)=> s + i.price * i.quantity, 0);
+  // Flat delivery fee policy: ₹15 per order
+  const deliveryFee = 15;
+  const total = subtotal + deliveryFee;
 
     const instance = getInstance();
     const rzpOrder = await instance.orders.create({

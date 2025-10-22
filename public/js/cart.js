@@ -89,7 +89,8 @@
         <button data-remove='${item._id}' class='text-xs text-red-500'>Remove</button>
       </div>`;
     }).join('');
-    const deliveryFee = subtotal < 200 ? 15 : 10;
+  // Flat delivery fee policy: ₹15 per order
+  const deliveryFee = 15;
     subtotalEl.textContent = '₹'+subtotal;
     deliveryFeeEl.textContent = '₹'+deliveryFee;
     totalEl.textContent = '₹'+(subtotal+deliveryFee);

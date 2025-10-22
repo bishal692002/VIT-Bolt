@@ -86,13 +86,14 @@
     const todayStart = new Date(); todayStart.setHours(0,0,0,0);
     const deliveredToday = history.filter(o=> new Date(o.updatedAt)>=todayStart);
     const count = deliveredToday.length;
-    const earnings = deliveredToday.reduce((s,o)=> s + 15, 0);
+  // Rider earnings policy: ₹10 per delivered order
+  const earnings = deliveredToday.reduce((s,o)=> s + 10, 0);
     const active = assigned.filter(o=> o.status==='out_for_delivery').length;
     statsEl.innerHTML = [
       { label:'Delivered Today', value: count },
       { label:'Active', value: active },
       { label:'Earnings (₹)', value: earnings },
-      { label:'Per Delivery (₹)', value: 15 }
+  { label:'Per Delivery (₹)', value: 10 }
     ].map(c=> `<div class='bg-white border border-gray-100 rounded-md p-4 text-center'>
       <div class='text-xl font-semibold'>${c.value}</div>
       <div class='text-xs text-gray-500 mt-1 uppercase tracking-wide'>${c.label}</div>
