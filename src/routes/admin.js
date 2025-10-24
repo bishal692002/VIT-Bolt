@@ -306,10 +306,14 @@ router.patch('/vendors/:id/toggle', adminAuth, async (req, res) => {
 router.get('/analytics/stats', adminAuth, async (req, res) => {
   try {
     const totalOrders = await Order.countDocuments();
+    // Sum revenue from PAID orders; use order total (gross customer charge)
     const totalRevenue = await Order.aggregate([
-      { $match: { paymentStatus: 'paid' } },
+      { $match: { 'payment.status': 'paid' } },
       { $group: { _id: null, total: { $sum: '$total' } } }
     ]);
+    const paidCount = await Order.countDocuments({ 'payment.status': 'paid' });
+    // Platform earnings: ₹5 per paid order (₹15 delivery fee - ₹10 rider payout)
+    const platformEarnings = paidCount * 5;
     
     const totalVendors = await Vendor.countDocuments();
     const activeVendors = await Vendor.countDocuments({ isActive: true });
@@ -319,6 +323,8 @@ router.get('/analytics/stats', adminAuth, async (req, res) => {
     res.json({
       totalOrders,
       totalRevenue: totalRevenue[0]?.total || 0,
+      paidOrders: paidCount,
+      platformEarnings,
       totalVendors,
       activeVendors,
       totalUsers,
@@ -352,7 +358,7 @@ router.get('/analytics/orders-timeline', adminAuth, async (req, res) => {
     startDate.setDate(startDate.getDate() - daysBack);
     
     const timeline = await Order.aggregate([
-      { $match: { createdAt: { $gte: startDate } } },
+      { $match: { createdAt: { $gte: startDate }, 'payment.status': 'paid' } },
       {
         $group: {
           _id: groupBy,
@@ -362,8 +368,42 @@ router.get('/analytics/orders-timeline', adminAuth, async (req, res) => {
       },
       { $sort: { _id: 1 } }
     ]);
-    
-    res.json(timeline);
+    // Post-process to ensure fixed buckets and stable order (prevents visual growth glitches)
+    function pad(n){ return String(n).padStart(2, '0'); }
+    function fmtUTC(d, withHour){
+      const y = d.getUTCFullYear();
+      const m = pad(d.getUTCMonth()+1);
+      const day = pad(d.getUTCDate());
+      if(!withHour) return `${y}-${m}-${day}`;
+      const h = pad(d.getUTCHours());
+      return `${y}-${m}-${day} ${h}:00`;
+    }
+    const map = Object.fromEntries(timeline.map(t => [t._id, { count: t.count, revenue: t.revenue }]));
+    const now = new Date();
+    const filled = [];
+    if (period === 'day') {
+      for (let i = 23; i >= 0; i--) {
+        const d = new Date(now.getTime() - i*60*60*1000);
+        const key = fmtUTC(d, true);
+        const v = map[key] || { count: 0, revenue: 0 };
+        filled.push({ _id: key, count: v.count, revenue: v.revenue });
+      }
+    } else if (period === 'month') {
+      for (let i = 29; i >= 0; i--) {
+        const d = new Date(now.getTime() - i*24*60*60*1000);
+        const key = fmtUTC(d, false);
+        const v = map[key] || { count: 0, revenue: 0 };
+        filled.push({ _id: key, count: v.count, revenue: v.revenue });
+      }
+    } else { // week
+      for (let i = 6; i >= 0; i--) {
+        const d = new Date(now.getTime() - i*24*60*60*1000);
+        const key = fmtUTC(d, false);
+        const v = map[key] || { count: 0, revenue: 0 };
+        filled.push({ _id: key, count: v.count, revenue: v.revenue });
+      }
+    }
+    res.json(filled);
   } catch (error) {
     res.status(500).json({ error: 'Failed to fetch orders timeline' });
   }
@@ -373,7 +413,7 @@ router.get('/analytics/orders-timeline', adminAuth, async (req, res) => {
 router.get('/analytics/top-vendors', adminAuth, async (req, res) => {
   try {
     const topVendors = await Order.aggregate([
-      { $match: { paymentStatus: 'paid' } },
+      { $match: { 'payment.status': 'paid' } },
       { $unwind: '$items' },
       {
         $lookup: {
@@ -421,7 +461,7 @@ router.get('/analytics/top-vendors', adminAuth, async (req, res) => {
 router.get('/analytics/popular-items', adminAuth, async (req, res) => {
   try {
     const popularItems = await Order.aggregate([
-      { $match: { paymentStatus: 'paid' } },
+      { $match: { 'payment.status': 'paid' } },
       { $unwind: '$items' },
       {
         $group: {

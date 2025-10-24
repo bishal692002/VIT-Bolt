@@ -1,8 +1,7 @@
 // Admin Dashboard JavaScript
 const adminToken = localStorage.getItem('adminToken');
-
 if (!adminToken) {
-  window.location.href = '/vitato/admin-login.html';
+  window.location.href = '/admin-login';
 }
 
 const API_BASE = '/vitato/admin-api';
@@ -103,6 +102,63 @@ window.loadApplications = loadApplications;
 window.loadVendors = loadVendors;
 window.logout = logout;
 
+// ----- Database Table State -----
+const dbState = { collection: null, page: 1, limit: 10, total: 0, sortKey: null, sortDir: 'asc' };
+
+function renderTable(container, items){
+  if(!Array.isArray(items) || items.length === 0){
+    container.innerHTML = '<div class="p-6 text-sm text-gray-500 text-center">No data</div>';
+    return;
+  }
+  // Determine columns from first item
+  const first = items[0];
+  const keys = Object.keys(first);
+  const orderPreferred = ['_id','id','name','email','role','status','createdAt','updatedAt'];
+  keys.sort((a,b)=>{
+    const ia = orderPreferred.indexOf(a), ib = orderPreferred.indexOf(b);
+    if(ia !== -1 || ib !== -1){ return (ia === -1? 999: ia) - (ib === -1? 999: ib); }
+    return a.localeCompare(b);
+  });
+  // Client-side sort for current page if requested
+  if(dbState.sortKey){
+    const dir = dbState.sortDir === 'desc' ? -1 : 1;
+    items.sort((x,y)=>{
+      const a = x[dbState.sortKey];
+      const b = y[dbState.sortKey];
+      if(a==null && b==null) return 0; if(a==null) return -1*dir; if(b==null) return 1*dir;
+      if(typeof a === 'number' && typeof b === 'number') return (a-b)*dir;
+      return String(a).localeCompare(String(b)) * dir;
+    });
+  }
+  // Build table
+  const thead = `<thead><tr>${keys.map(k=> `<th data-sort="${k}" class="px-3 py-2 text-[11px] uppercase text-gray-500 cursor-pointer hover:text-gray-900">${k}${dbState.sortKey===k? (dbState.sortDir==='asc'?' ▲':' ▼'):''}</th>`).join('')}</tr></thead>`;
+  const rows = items.map(row => `<tr class="odd:bg-gray-50">
+    ${keys.map(k=> `<td class="px-3 py-2 text-xs text-gray-800">${formatCell(row[k])}</td>`).join('')}
+  </tr>`).join('');
+  container.innerHTML = `
+    <div class="overflow-auto">
+      <table class="w-full text-left border-collapse">${thead}<tbody class="divide-y">${rows}</tbody></table>
+    </div>`;
+  // Bind sorting
+  container.querySelectorAll('th[data-sort]')?.forEach(th => th.addEventListener('click', ()=>{
+    const key = th.getAttribute('data-sort');
+    if(dbState.sortKey === key){ dbState.sortDir = dbState.sortDir === 'asc' ? 'desc' : 'asc'; }
+    else { dbState.sortKey = key; dbState.sortDir = 'asc'; }
+    renderTable(container, items.slice());
+  }));
+}
+
+function formatCell(val){
+  if(val == null) return '';
+  if(typeof val === 'object'){
+    // Mongoose id or populated refs
+    if(val._id && Object.keys(val).length === 1) return val._id;
+    try { return JSON.stringify(val).slice(0,120).replace(/[\"{}]/g,'').replace(/:,/g,': ').replace(/,/g,', '); } catch { return String(val); }
+  }
+  if(typeof val === 'boolean') return val ? 'Yes' : 'No';
+  return String(val);
+}
+
 // Stats Cards
 async function loadStats() {
   try {
@@ -111,34 +167,21 @@ async function loadStats() {
     
     const statsCards = document.getElementById('statsCards');
     statsCards.innerHTML = `
-      <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
-        <p class="text-xs text-gray-500 uppercase tracking-wide">Total Orders</p>
-        <p class="text-2xl font-bold text-gray-900 mt-1">${stats.totalOrders || 0}</p>
-      </div>
-      <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
-        <p class="text-xs text-gray-500 uppercase tracking-wide">Revenue</p>
-        <p class="text-2xl font-bold text-gray-900 mt-1">₹${(stats.totalRevenue || 0).toFixed(2)}</p>
-      </div>
-      <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
-        <p class="text-xs text-gray-500 uppercase tracking-wide">Total Vendors</p>
-        <p class="text-2xl font-bold text-gray-900 mt-1">${stats.totalVendors || 0}</p>
-      </div>
-      <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
-        <p class="text-xs text-gray-500 uppercase tracking-wide">Active Vendors</p>
-        <p class="text-2xl font-bold text-green-600 mt-1">${stats.activeVendors || 0}</p>
-      </div>
-      <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
-        <p class="text-xs text-gray-500 uppercase tracking-wide">Total Users</p>
-        <p class="text-2xl font-bold text-gray-900 mt-1">${stats.totalUsers || 0}</p>
-      </div>
-      <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
-        <p class="text-xs text-gray-500 uppercase tracking-wide">Pending Apps</p>
-        <p class="text-2xl font-bold text-yellow-600 mt-1">${stats.pendingApplications || 0}</p>
-      </div>
+      <sl-card class="p-0"><div class="p-4"><p class="text-xs text-gray-500 uppercase tracking-wide">Total Orders</p><p class="text-2xl font-bold text-gray-900 mt-1">${stats.totalOrders || 0}</p></div></sl-card>
+      <sl-card class="p-0"><div class="p-4"><p class="text-xs text-gray-500 uppercase tracking-wide">Total Sales</p><p class="text-2xl font-bold text-gray-900 mt-1">₹${(stats.totalRevenue || 0).toFixed(2)}</p></div></sl-card>
+      <sl-card class="p-0"><div class="p-4"><p class="text-xs text-gray-500 uppercase tracking-wide">Our Earnings</p><p class="text-2xl font-bold text-emerald-600 mt-1">₹${(stats.platformEarnings || 0).toFixed(2)}</p></div></sl-card>
+      <sl-card class="p-0"><div class="p-4"><p class="text-xs text-gray-500 uppercase tracking-wide">Total Vendors</p><p class="text-2xl font-bold text-gray-900 mt-1">${stats.totalVendors || 0}</p></div></sl-card>
+      <sl-card class="p-0"><div class="p-4"><p class="text-xs text-gray-500 uppercase tracking-wide">Active Vendors</p><p class="text-2xl font-bold text-green-600 mt-1">${stats.activeVendors || 0}</p></div></sl-card>
+      <sl-card class="p-0"><div class="p-4"><p class="text-xs text-gray-500 uppercase tracking-wide">Total Users</p><p class="text-2xl font-bold text-gray-900 mt-1">${stats.totalUsers || 0}</p></div></sl-card>
     `;
     
     // Update pending badge
-    document.getElementById('pendingBadge').textContent = stats.pendingApplications || 0;
+    const pendingEl = document.getElementById('pendingBadge');
+    if (pendingEl?.tagName === 'SL-BADGE') {
+      pendingEl.textContent = String(stats.pendingApplications || 0);
+    } else if (pendingEl) {
+      pendingEl.textContent = stats.pendingApplications || 0;
+    }
     const notifCount = document.getElementById('notificationCount');
     if (stats.pendingApplications > 0) {
       notifCount.textContent = stats.pendingApplications;
@@ -366,9 +409,6 @@ async function toggleVendorStatus(id, currentStatus) {
   }
 }
 
-// Analytics
-let ordersChart, vendorsChart;
-
 async function loadAnalytics() {
   loadOrdersTimeline('week');
   loadTopVendors();
@@ -379,44 +419,41 @@ async function loadOrdersTimeline(period = 'week') {
   try {
     const res = await fetch(`${API_BASE}/analytics/orders-timeline?period=${period}`, { headers });
     const data = await res.json();
-    
-    const ctx = document.getElementById('ordersChart');
-    if (!ctx) return;
-    
-    if (ordersChart) {
-      ordersChart.destroy();
-      ordersChart = null;
-    }
-    
-    ordersChart = new Chart(ctx, {
-      type: 'line',
-      data: {
-        labels: data.map(d => d._id),
-        datasets: [{
-          label: 'Orders',
-          data: data.map(d => d.count),
-          borderColor: 'rgb(59, 130, 246)',
-          backgroundColor: 'rgba(59, 130, 246, 0.1)',
-          tension: 0.4,
-          fill: true
-        }]
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: {
-          legend: { display: false }
-        },
-        scales: {
-          y: {
-            beginAtZero: true,
-            ticks: {
-              stepSize: 1
-            }
-          }
+    const list = document.getElementById('ordersTimelineList');
+    if (!list) return;
+    const rows = data.map(d => `<tr>
+        <td class="px-3 py-2 text-xs text-gray-600">${d._id}</td>
+        <td class="px-3 py-2 text-xs font-semibold text-gray-900">${d.count}</td>
+        <td class="px-3 py-2 text-xs text-gray-500">₹${(d.revenue || 0).toFixed(2)}</td>
+      </tr>`).join('');
+    list.innerHTML = `
+      <table class="w-full text-left border-collapse">
+        <thead>
+          <tr class="text-[11px] uppercase text-gray-500">
+            <th class="px-3 py-2">Period</th>
+            <th class="px-3 py-2">Orders</th>
+            <th class="px-3 py-2">Revenue</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y">${rows}</tbody>
+      </table>`;
+
+    // Toggle active button styles
+    try {
+      const container = list.closest('.bg-white');
+      const buttons = container.querySelectorAll('[data-period]');
+      buttons.forEach(btn => {
+        const isActive = btn.getAttribute('data-period') === period;
+        if (btn.tagName === 'SL-BUTTON') {
+          btn.variant = isActive ? 'primary' : 'neutral';
+        } else {
+          btn.classList.toggle('bg-blue-100', isActive);
+          btn.classList.toggle('text-blue-700', isActive);
+          btn.classList.toggle('bg-gray-100', !isActive);
+          btn.classList.toggle('text-gray-700', !isActive);
         }
-      }
-    });
+      });
+    } catch {}
   } catch (error) {
     console.error('Failed to load orders timeline:', error);
   }
@@ -426,41 +463,17 @@ async function loadTopVendors() {
   try {
     const res = await fetch(`${API_BASE}/analytics/top-vendors`, { headers });
     const data = await res.json();
-    
-    const ctx = document.getElementById('vendorsChart');
-    if (!ctx) return;
-    
-    if (vendorsChart) {
-      vendorsChart.destroy();
-      vendorsChart = null;
-    }
-    
-    vendorsChart = new Chart(ctx, {
-      type: 'bar',
-      data: {
-        labels: data.map(v => v.vendorName),
-        datasets: [{
-          label: 'Revenue (₹)',
-          data: data.map(v => v.revenue),
-          backgroundColor: 'rgba(34, 197, 94, 0.7)',
-          borderColor: 'rgb(34, 197, 94)',
-          borderWidth: 1
-        }]
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        indexAxis: 'y',
-        plugins: {
-          legend: { display: false }
-        },
-        scales: {
-          x: {
-            beginAtZero: true
-          }
-        }
-      }
-    });
+    const list = document.getElementById('vendorsListSimple');
+    if (!list) return;
+    list.innerHTML = data.map((v, i) => `
+      <div class="flex items-center justify-between p-2 bg-gray-50 rounded">
+        <div class="flex items-center gap-2">
+          <span class="w-6 h-6 bg-green-100 text-green-700 rounded-full text-[10px] flex items-center justify-center">${i+1}</span>
+          <span class="text-xs font-medium text-gray-900">${v.vendorName || 'Vendor'}</span>
+        </div>
+        <span class="text-xs font-semibold text-green-700">₹${(v.revenue || 0).toFixed(2)}</span>
+      </div>
+    `).join('') || '<p class="text-xs text-gray-500">No data</p>';
   } catch (error) {
     console.error('Failed to load top vendors:', error);
   }
@@ -498,27 +511,36 @@ async function loadPopularItems() {
 }
 
 // Database Browser
-async function browseCollection(collection) {
+async function browseCollection(collection, page=1, limit=10) {
   try {
-    const res = await fetch(`${API_BASE}/database/${collection}`, { headers });
+    dbState.collection = collection; dbState.page = page; dbState.limit = limit;
+    const skip = (page-1) * limit;
+    const res = await fetch(`${API_BASE}/database/${collection}?limit=${limit}&skip=${skip}`, { headers });
     const result = await res.json();
-    
+    dbState.total = result.total || 0;
     const content = document.getElementById('databaseContent');
-    
+    const pag = document.getElementById('dbPagination');
+    // Header with export
     content.innerHTML = `
-      <div class="flex justify-between items-center mb-4">
+      <div class="flex justify-between items-center p-3 border-b">
         <div>
           <h3 class="font-semibold text-gray-900 capitalize">${collection}</h3>
-          <p class="text-xs text-gray-500">${result.total} total records</p>
+          <p class="text-xs text-gray-500">${dbState.total} total records</p>
         </div>
-        <button onclick="exportCollection('${collection}')" class="px-3 py-1 text-sm bg-blue-600 text-white rounded hover:bg-blue-700">
-          Export JSON
-        </button>
+        <sl-button size="small" variant="primary" onclick="exportCollection('${collection}')">Export JSON</sl-button>
       </div>
-      <div class="bg-white rounded border border-gray-300 overflow-auto max-h-96">
-        <pre class="p-4 text-xs">${JSON.stringify(result.data, null, 2)}</pre>
-      </div>
+      <div id="dbTableWrap" class="max-h-[480px] overflow-auto"></div>
     `;
+    const tableWrap = document.getElementById('dbTableWrap');
+    renderTable(tableWrap, Array.isArray(result.data)? result.data : []);
+    // Pagination
+    const totalPages = Math.max(1, Math.ceil(dbState.total / dbState.limit));
+    pag.innerHTML = `<sl-pagination size="small" total="${dbState.total}" per-page="${dbState.limit}" current-page="${dbState.page}"></sl-pagination>`;
+    const pager = pag.querySelector('sl-pagination');
+    pager?.addEventListener('sl-change', (e)=>{
+      const nextPage = e.target.currentPage || 1;
+      browseCollection(collection, nextPage, dbState.limit);
+    });
   } catch (error) {
     console.error('Failed to browse collection:', error);
   }
@@ -536,40 +558,52 @@ async function exportCollection(collection) {
 
 // Notifications
 function showNotification(message) {
-  const notification = document.createElement('div');
-  notification.className = 'fixed top-20 right-4 bg-blue-600 text-white px-4 py-3 rounded-lg shadow-lg z-50 max-w-sm';
-  notification.innerHTML = `
-    <div class="flex items-start gap-3">
-      <svg class="w-5 h-5 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path>
-      </svg>
-      <p class="text-sm">${message}</p>
-    </div>
-  `;
-  
-  document.body.appendChild(notification);
-  
-  setTimeout(() => {
-    notification.style.transition = 'all 0.3s ease';
-    notification.style.transform = 'translateX(400px)';
-    setTimeout(() => document.body.removeChild(notification), 300);
-  }, 4000);
+  try {
+    // Prefer Shoelace alert if available
+    const alert = document.createElement('sl-alert');
+    alert.variant = 'primary';
+    alert.closable = true;
+    alert.duration = 4000;
+    alert.innerHTML = `<sl-icon slot="icon" name="bell"></sl-icon>${message}`;
+    document.body.appendChild(alert);
+    alert.toast();
+  } catch {
+    const notification = document.createElement('div');
+    notification.className = 'fixed top-20 right-4 bg-blue-600 text-white px-4 py-3 rounded-lg shadow-lg z-50 max-w-sm';
+    notification.textContent = message;
+    document.body.appendChild(notification);
+    setTimeout(() => {
+      notification.style.transition = 'all 0.3s ease';
+      notification.style.transform = 'translateX(400px)';
+      setTimeout(() => document.body.removeChild(notification), 300);
+    }, 4000);
+  }
 }
 
 // Logout
 async function logout() {
-  const confirmed = await confirmModal.show({
-    title: 'Logout',
-    message: 'Are you sure you want to logout from the admin dashboard?',
-    confirmText: 'Logout',
-    type: 'warning'
-  });
-  
-  if (confirmed) {
-    localStorage.removeItem('adminToken');
-    toast.info('Logging out...');
-    setTimeout(() => {
-      window.location.href = '/vitato/admin-login.html';
-    }, 500);
+  try {
+    let confirmed = false;
+    if (window.confirmModal && typeof window.confirmModal.show === 'function') {
+      confirmed = await window.confirmModal.show({
+        title: 'Logout',
+        message: 'Are you sure you want to logout from the admin dashboard?',
+        confirmText: 'Logout',
+        type: 'warning'
+      });
+    } else {
+      confirmed = window.confirm('Are you sure you want to logout?');
+    }
+    if (!confirmed) return;
+    try {
+      await fetch('/admin-logout', { method: 'POST', headers: { 'Authorization': `Bearer ${adminToken}` } });
+    } catch {}
+    try { localStorage.removeItem('adminToken'); } catch {}
+    try { toast && toast.info && toast.info('Logging out...'); } catch {}
+    window.location.replace('/admin-login');
+  } catch (e) {
+    // Fallback: force client-side logout
+    try { localStorage.removeItem('adminToken'); } catch {}
+    window.location.replace('/admin-login');
   }
 }

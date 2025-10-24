@@ -32,6 +32,37 @@ mongoose.connect(process.env.MONGO_URI || 'mongodb://127.0.0.1:27017/vitato');
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
+// Custom admin login route (hidden behind a clean path)
+app.get('/admin-login', (req, res) => {
+  try {
+    res.set('X-Robots-Tag', 'noindex, nofollow');
+    return res.sendFile(path.join(__dirname, 'public', 'vitato', 'admin-login.html'));
+  } catch (e) {
+    return res.status(500).send('Admin login unavailable');
+  }
+});
+
+// Clean admin dashboard route
+app.get('/admin', (req, res) => {
+  try {
+    res.set('X-Robots-Tag', 'noindex, nofollow');
+    return res.sendFile(path.join(__dirname, 'public', 'vitato', 'admin-dashboard.html'));
+  } catch (e) {
+    return res.status(500).send('Admin dashboard unavailable');
+  }
+});
+
+// Optionally block direct access to the static file path
+app.get('/vitato/admin-login.html', (req, res) => {
+  return res.status(404).send('Not Found');
+});
+
+// Redirect old dashboard path to clean /admin for consistency
+app.get('/vitato/admin-dashboard.html', (req, res) => {
+  return res.redirect(302, '/admin');
+});
+
 app.use(express.static(path.join(__dirname, 'public')));
 
 // No session/passport; using stateless JWT
@@ -48,6 +79,9 @@ app.use('/vitato/admin-api', adminRouter);
 // Admin authentication routes
 app.post('/vitato/admin-login', adminLogin);
 app.post('/vitato/admin-logout', adminLogout);
+// Clean aliases for admin auth
+app.post('/admin-login', adminLogin);
+app.post('/admin-logout', adminLogout);
 
 // Local Auth Routes (JWT)
 app.post('/auth/signup', async (req, res) => {
