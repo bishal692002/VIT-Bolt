@@ -7,10 +7,12 @@ ENV NODE_ENV=production
 
 # ---- Build stage: install dev deps and build Tailwind CSS ----
 FROM base AS build
+# Build stage needs devDependencies (Tailwind CLI), so switch NODE_ENV
+ENV NODE_ENV=development
 # Install OS deps if needed (e.g., libc compatibility)
 RUN apk add --no-cache bash
 
-# Install dev dependencies
+# Install dev dependencies (includes Tailwind CSS CLI)
 COPY package*.json ./
 RUN if [ -f package-lock.json ]; then npm ci; else npm install; fi
 
@@ -23,6 +25,8 @@ RUN npm run build:css || (echo "Tailwind build failed, continuing with existing 
 
 # ---- Production dependencies (no dev deps) ----
 FROM base AS prod-deps
+# Ensure prod-only install in this stage
+ENV NODE_ENV=production
 COPY package*.json ./
 RUN if [ -f package-lock.json ]; then npm ci --omit=dev; else npm install --omit=dev; fi
 

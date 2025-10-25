@@ -43,11 +43,12 @@ This spins up the app and MongoDB together.
 - docker compose down
 
 App: http://localhost:3000
-MongoDB: mongodb://localhost:27017 (Compose internal URL is mongodb://mongo:27017/vitato)
 
 Notes:
 - Ensure Docker Desktop/daemon is running.
 - If you have something else on port 3000, change PORT in .env.
+- CSS note: Docker builds Tailwind automatically inside the image (runs `npm run build:css`). If styles look off after changes, force a clean rebuild:
+- `docker compose build --no-cache` then `docker compose up`.
 
 ## Environment variables
 - PORT: Web server port (default 3000)
@@ -63,19 +64,9 @@ Notes:
 
 ## Scripts
 - npm run build:css → build Tailwind to public/css/tailwind.css
-- npm run seed → seed demo data
-- npm run seed:vendor-users → create vendor users from seed
 - npm start → start server
 - npm run dev → start with nodemon (hot reload; requires local Node)
 
-## Project structure
-- server.js → Express app + Socket.IO bootstrap
-- src/models → Mongoose models (User, Vendor, FoodItem, Order, VendorApplication)
-- src/routes → API routes (api.js, payment.js, admin.js, vendorApplication.js, vendor.js)
-- src/middleware → auth, adminAuth, geoFence
-- src/sockets → orderSocket.js
-- public → static HTML/JS/CSS
-- seed → seed scripts
 
 ## Docker details
 - Dockerfile → Multi‑stage build; compiles Tailwind and installs only production deps in final image; runs as non‑root; exposes 3000; healthcheck included.
@@ -88,5 +79,4 @@ Notes:
 - CSS missing styles: run npm run build:css (Docker build already runs it).
 - Mongo connection errors: verify MONGO_URI and that MongoDB is reachable.
 
-## License
-MIT
+
