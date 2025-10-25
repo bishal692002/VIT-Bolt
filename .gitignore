@@ -122,9 +122,9 @@ db/data/
 # Uploads & User Generated Content
 # ========================================
 # Keep uploaded images in git, but ignore if large
-# Uncomment if you want to ignore uploads folder:
-# public/uploads/*
-# !public/uploads/.gitkeep
+# Ignore uploaded files by default; keep the folder with .gitkeep
+public/uploads/*
+!public/uploads/.gitkeep
 
 # ========================================
 # Package Manager Lockfiles
