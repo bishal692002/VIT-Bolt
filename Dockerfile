@@ -44,8 +44,9 @@ COPY --chown=node:node src ./src
 COPY --chown=node:node public ./public
 COPY --chown=node:node tailwind.config.js postcss.config.js ./
 
-# Overwrite CSS with built artifact if present
-COPY --chown=node:node --from=build /app/public/css/tailwind.css ./public/css/tailwind.css
+# Bring over built CSS (and other css assets) if present
+# Copying the folder avoids failing the build when tailwind.css wasn't generated
+COPY --chown=node:node --from=build /app/public/css ./public/css
 
 # Expose application port
 EXPOSE 3000
