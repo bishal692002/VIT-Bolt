@@ -1,6 +1,15 @@
 (async function(){
   function getToken(){ return localStorage.getItem('vitato_token'); }
   function setToken(t){ if(t) localStorage.setItem('vitato_token', t); else localStorage.removeItem('vitato_token'); }
+  function parseJwt(token){
+    try { return JSON.parse(atob(token.split('.')[1])); } catch { return null; }
+  }
+  function routeForRole(role){
+    if(role === 'vendor') return '/vendor.html';
+    if(role === 'delivery') return '/rider.html';
+    if(role === 'student') return '/student.html';
+    return '/menu.html';
+  }
   async function fetchSessionUser(){
     const token = getToken();
     if(!token) return null;
@@ -19,8 +28,9 @@
   async function refreshNav(){
     const user = await fetchSessionUser();
     if(user){
+      const target = routeForRole(user.role);
       if(navAuth){ navAuth.classList.remove('hidden'); navUser.textContent = user.name || user.email; }
-      if(authForm) authForm.parentElement.innerHTML = '<p class="text-sm text-gray-600">Logged in as '+(user.name||user.email)+'. <a href="/menu.html" class="text-yellow-600 underline">Go to menu</a></p>';
+      if(authForm) authForm.parentElement.innerHTML = '<p class="text-sm text-gray-600">Logged in as '+(user.name||user.email)+'. <a href="'+target+'" class="text-yellow-600 underline">Go to dashboard</a></p>';
     }
   }
 
@@ -46,7 +56,10 @@
         const data = await res.json();
         if(!res.ok){ authMsg.textContent = data.error || 'Error'; return; }
   if(data.token){ setToken(data.token); }
-  let target = data.redirect || '/menu.html';
+  // Prefer server-provided redirect; otherwise compute from role
+  let target = data.redirect || (data.user ? routeForRole(data.user.role) : (function(){
+    const t = getToken(); const p = t && parseJwt(t); return routeForRole(p && p.role);
+  })());
   try {
     const last = localStorage.getItem('vitato_lastPage');
     if(last && !['/','/index.html','/auth','/login','/signup'].includes(last)) target = last;
@@ -60,10 +73,11 @@
   logoutBtn.addEventListener('click', async ()=>{ setToken(null); window.location.href='/'; });
   }
 
-  const protectedPages = ['/menu.html','/cart.html','/track.html'];
+  const protectedPages = ['/menu.html','/cart.html','/track.html','/student.html','/vendor.html','/rider.html'];
   if (protectedPages.includes(location.pathname)) {
-  const user = await fetchSessionUser();
-  if(!user){ window.location.href = '/'; return; }
+    try { localStorage.setItem('vitato_lastPage', location.pathname + location.search + location.hash); } catch {}
+    const user = await fetchSessionUser();
+    if(!user){ window.location.replace('/'); return; }
     if(navAuth){ navAuth.classList.remove('hidden'); navUser.textContent = user.name || user.email; }
   }
 

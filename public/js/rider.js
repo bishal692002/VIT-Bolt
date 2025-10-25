@@ -1,5 +1,10 @@
 (()=>{
   const token = localStorage.getItem('vitato_token');
+  if (!token) {
+    try { localStorage.setItem('vitato_lastPage', location.pathname + location.search + location.hash); } catch {}
+    window.location.replace('/');
+    return;
+  }
   const socket = io({ auth:{ token }});
   const available = document.getElementById('availableOrders');
   const myDeliveries = document.getElementById('myDeliveries');
