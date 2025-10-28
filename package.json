@@ -1,5 +1,5 @@
 {
-  "name": "vitato",
+  "name": "vit-bolt",
   "version": "0.1.0",
   "description": "Campus-exclusive food delivery platform for VIT Bhopal",
   "main": "server.js",
@@ -7,9 +7,7 @@
   "scripts": {
     "dev": "nodemon server.js",
     "start": "node server.js",
-    "build:css": "tailwindcss -i ./public/css/tailwind.input.css -o ./public/css/tailwind.css --minify",
-    "seed": "node seed/seedData.js",
-    "seed:vendor-users": "node seed/createVendorUsers.js"
+    "build:css": "tailwindcss -i ./public/css/tailwind.input.css -o ./public/css/tailwind.css --minify"
   },
   "dependencies": {
     "bcrypt": "^5.1.1",

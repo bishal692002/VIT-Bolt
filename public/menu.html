@@ -3,48 +3,306 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Menu – VITato</title>
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+  <meta http-equiv="Pragma" content="no-cache" />
+  <meta http-equiv="Expires" content="0" />
+  <title>Menu – VIT-Bolt</title>
+
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  
   <link rel="stylesheet" href="/css/tailwind.css" />
   <link rel="stylesheet" href="/css/ui-fixes.css" />
-  <style>body{font-family:'Inter',sans-serif;background:#FAFAFA;color:#333}
-  body{opacity:1;transition:opacity .16s ease, transform .24s cubic-bezier(.4,.0,.2,1);} 
-  body.page-enter{opacity:0;transform:translateY(4px);} 
-  body.page-enter-active{opacity:1;transform:translateY(0);} 
-  body.page-exit{opacity:0;transform:translateY(-4px);} </style>
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            'poppins': ['Poppins', 'sans-serif']
+          },
+          colors: {
+            'brand-yellow': '#F59E0B',
+            'brand-dark': '#D97706',
+            'brand-light': '#FCD34D'
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Poppins', sans-serif;
+      overflow-x: hidden;
+      background: linear-gradient(135deg, #FFFBEB 0%, #FEF3C7 50%, #FDE68A 100%);
+      min-height: 100vh;
+    }
+
+    /* Smooth Animations */
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes slideInLeft {
+      from {
+        opacity: 0;
+        transform: translateX(-50px);
+      }
+      to {
+        opacity: 1;
+        transform: translateX(0);
+      }
+    }
+
+    .animate-fade-in-up {
+      animation: fadeInUp 0.6s ease-out forwards;
+      opacity: 0;
+    }
+
+    .animate-slide-in-left {
+      animation: slideInLeft 0.6s ease-out forwards;
+      opacity: 0;
+    }
+
+    /* Card Hover Effects */
+    .menu-card {
+      transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+      background: white;
+      border: 2px solid transparent;
+    }
+
+    .menu-card:hover {
+      transform: translateY(-12px) scale(1.02);
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+      border-color: rgba(245, 158, 11, 0.3);
+    }
+
+    /* Search and Filter Styling */
+    .search-input, .filter-select {
+      background: white;
+      border: 2px solid rgba(245, 158, 11, 0.2);
+      transition: all 0.3s ease;
+    }
+
+    .search-input:focus, .filter-select:focus {
+      border-color: #F59E0B;
+      box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.1);
+    }
+
+    /* Button Styling */
+    .btn-add {
+      background: linear-gradient(135deg, #F59E0B 0%, #D97706 100%);
+      transition: all 0.3s ease;
+    }
+
+    .btn-add:hover:not(:disabled) {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 25px rgba(245, 158, 11, 0.4);
+    }
+
+    .btn-add:active:not(:disabled) {
+      transform: translateY(0) scale(0.98);
+    }
+
+    /* Cart count badge */
+    .cart-badge {
+      background: linear-gradient(135deg, #EF4444 0%, #DC2626 100%);
+      animation: pulse 2s infinite;
+    }
+  </style>
 </head>
-<body class="min-h-full flex flex-col">
-  <nav class="w-full bg-white border-b border-gray-200 px-4 py-3 flex items-center justify-between sticky top-0 z-30">
-    <a href="/student.html" class="font-bold text-lg">VITato</a>
-    <div class="flex items-center space-x-4 text-sm">
-      <a href="/student.html" class="underline">Dashboard</a>
-      <a href="/menu.html">Menu</a>
-      <a href="/track.html">Track</a>
-      <a href="/cart.html" class="relative">
-        <span>Cart</span>
-        <span id="cartCount" class="absolute -top-2 -right-3 text-xs bg-yellow-400 text-gray-800 rounded-full px-1.5 py-0.5">0</span>
-      </a>
-      <button id="logoutBtn" class="text-gray-700">Logout</button>
+<body class="min-h-full">
+  <!-- Header -->
+  <header class="fixed top-0 left-0 right-0 bg-white/95 backdrop-blur-lg shadow-sm z-50">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex items-center justify-between h-20">
+
+        <!-- Logo -->
+        <div class="flex items-center space-x-3">
+          <button id="mobileMenuBtn" class="md:hidden inline-flex items-center justify-center w-10 h-10 rounded-xl border border-gray-300 bg-white/80 hover:bg-white transition-colors" aria-label="Open menu">
+            <svg class="w-5 h-5 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
+          </button>
+          <div class="text-4xl">🍔</div>
+          <div>
+            <h1 class="text-2xl font-bold text-gray-900">VIT-Bolt</h1>
+            <p class="text-xs text-gray-600 -mt-1">Delicious campus food</p>
+          </div>
+        </div>
+
+        <!-- Navigation -->
+        <nav class="hidden md:flex items-center space-x-8">
+          <a href="/student.html" class="text-sm font-semibold text-gray-700 hover:text-brand-yellow transition-colors">Dashboard</a>
+        </nav>
+
+        <!-- Right Buttons -->
+        <div class="flex items-center space-x-3">
+          <a href="/cart.html" class="relative flex items-center space-x-2 bg-brand-yellow hover:bg-brand-dark text-white px-4 py-2 rounded-xl font-medium transition-all transform hover:scale-105">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4m0 0L7 13m0 0l-1.5 6.5M7 13l1.5-6.5M7 13v8m10-8v8"/>
+            </svg>
+            <span>Cart</span>
+            <span id="cartCount" class="cart-badge text-xs text-white rounded-full px-2 py-1 min-w-[20px] text-center">0</span>
+          </a>
+          <button id="logoutBtn" class="px-4 py-2 text-sm font-medium text-gray-700 hover:text-brand-yellow transition-colors">
+            Logout
+          </button>
+        </div>
+      </div>
     </div>
-  </nav>
-  <main class="flex-1 max-w-6xl mx-auto w-full px-5 py-8">
-    <div class="mb-6 grid md:grid-cols-3 gap-4 items-center">
-      <input id="searchInput" type="text" placeholder="Search food..." class="md:col-span-2 w-full rounded-md border-gray-300 focus:border-yellow-400 focus:ring-yellow-400" />
-      <select id="categoryFilter" class="w-full rounded-md border-gray-300 focus:border-yellow-400 focus:ring-yellow-400">
-        <option value="">All Categories</option>
-        <option>Meals</option>
-        <option>Snacks</option>
-        <option>Beverages</option>
-      </select>
+  </header>
+
+  <!-- Main Content -->
+  <main class="pt-24 pb-12 px-4 sm:px-6 lg:px-8">
+    <div class="max-w-7xl mx-auto">
+      
+      <!-- Page Title -->
+      <div class="text-center mb-12 animate-fade-in-up">
+        <h2 class="text-4xl sm:text-5xl font-black text-gray-900 mb-4">
+          Campus Menu
+        </h2>
+        <p class="text-xl text-gray-700 font-medium">
+          Fresh food from your favorite campus vendors
+        </p>
+      </div>
+
+      <!-- Search and Filter Section -->
+      <div class="mb-8 animate-slide-in-left" style="animation-delay: 0.2s;">
+        <div class="bg-white/80 backdrop-blur-sm rounded-3xl p-6 shadow-xl border border-amber-200">
+          <div class="grid md:grid-cols-3 gap-4">
+            <div class="md:col-span-2">
+              <label class="block text-gray-800 font-medium mb-2">Search Food Items</label>
+              <input 
+                id="searchInput" 
+                type="text" 
+                placeholder="Search for delicious food..." 
+                class="search-input w-full px-4 py-3 rounded-xl text-gray-900 placeholder-gray-500 font-medium outline-none"
+              />
+            </div>
+            <div>
+              <label class="block text-gray-800 font-medium mb-2">Filter by Category</label>
+              <select 
+                id="categoryFilter" 
+                class="filter-select w-full px-4 py-3 rounded-xl text-gray-900 font-medium outline-none"
+              >
+                <option value="">All Categories</option>
+                <option>Meals</option>
+                <option>Snacks</option>
+                <option>Beverages</option>
+              </select>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Menu Grid -->
+      <div id="menuGrid" class="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 animate-fade-in-up" style="animation-delay: 0.4s;">
+        <!-- Menu items will be loaded here -->
+      </div>
     </div>
-    <div id="menuGrid" class="grid sm:grid-cols-2 lg:grid-cols-3 gap-6"></div>
   </main>
-  <footer class="py-6 text-center text-sm text-gray-500">© 2025 VITato</footer>
+  <!-- Footer -->
+  <footer class="bg-white/80 backdrop-blur-sm py-8 text-center border-t border-amber-200">
+    <p class="text-gray-700 font-medium">© 2025 VIT-Bolt. Made with ❤️ for VIT Bhopal</p>
+  </footer>
+
+  <!-- Mobile Navigation Drawer -->
+  <div id="mobileDrawer" class="fixed inset-0 z-50 hidden" aria-hidden="true">
+    <div class="absolute inset-0 bg-black/50 transition-opacity opacity-0"></div>
+    <div class="absolute left-0 top-0 h-full w-80 max-w-[85%] bg-white shadow-2xl transform transition-transform translate-x-[-100%]" role="dialog" aria-modal="true">
+      <div class="p-6 border-b border-amber-200 bg-gradient-to-r from-brand-yellow to-brand-dark">
+        <div class="flex items-center justify-between">
+          <div class="flex items-center space-x-3">
+            <div class="text-2xl">🍔</div>
+            <div>
+              <h3 class="font-bold text-white text-lg">VIT-Bolt</h3>
+              <p class="text-white/90 text-sm">Campus Menu</p>
+            </div>
+          </div>
+          <button id="mobileDrawerClose" class="w-10 h-10 inline-flex items-center justify-center rounded-xl bg-white/20 text-white hover:bg-white/30 transition-colors" aria-label="Close menu">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+      <nav class="p-6 space-y-3">
+        <a href="/student.html" class="flex items-center space-x-3 px-4 py-3 rounded-xl bg-amber-50 hover:bg-amber-100 transition-colors text-gray-900 font-medium">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2H5a2 2 0 00-2-2z"/>
+          </svg>
+          <span>Dashboard</span>
+        </a>
+        <a href="/menu.html" class="flex items-center space-x-3 px-4 py-3 rounded-xl bg-brand-yellow text-white font-medium">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+          </svg>
+          <span>Menu</span>
+        </a>
+        <a href="/cart.html" class="flex items-center space-x-3 px-4 py-3 rounded-xl bg-amber-50 hover:bg-amber-100 transition-colors text-gray-900 font-medium">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4m0 0L7 13m0 0l-1.5 6.5M7 13l1.5-6.5M7 13v8m10-8v8"/>
+          </svg>
+          <span>Cart</span>
+        </a>
+        <button id="mobileLogout" class="w-full flex items-center space-x-3 px-4 py-3 rounded-xl bg-red-50 hover:bg-red-100 transition-colors text-red-600 font-medium">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
+          </svg>
+          <span>Logout</span>
+        </button>
+      </nav>
+    </div>
+  </div>
+
   <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
   <script src="/js/transitions.js"></script>
   <script src="/js/auth.js"></script>
+  <script src="/js/mobile-nav.js"></script>
   <script src="/js/menu.js"></script>
+
+  <script>
+    // Enhanced animations on scroll
+    document.addEventListener('DOMContentLoaded', function() {
+      const observerOptions = {
+        threshold: 0.1,
+        rootMargin: '0px 0px -50px 0px'
+      };
+
+      const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting) {
+            entry.target.style.animationPlayState = 'running';
+          }
+        });
+      }, observerOptions);
+
+      document.querySelectorAll('.animate-fade-in-up, .animate-slide-in-left').forEach(el => {
+        el.style.animationPlayState = 'paused';
+        observer.observe(el);
+      });
+
+      // Start first animation immediately
+      setTimeout(() => {
+        const firstEl = document.querySelector('.animate-fade-in-up');
+        if (firstEl) firstEl.style.animationPlayState = 'running';
+      }, 100);
+    });
+  </script>
 </body>
 </html>

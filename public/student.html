@@ -1,131 +1,593 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Student Dashboard - VITato</title><script src="https://cdn.tailwindcss.com"></script><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet"><style>body{font-family:Inter,system-ui,sans-serif;background:#F9FAFB;color:#111827} .status-badge{font-size:11px;padding:4px 10px;border-radius:9999px;font-weight:700;letter-spacing:.3px;text-transform:uppercase} .card{background:#fff;border:1px solid #f3f4f6;border-radius:12px;box-shadow:0 1px 3px rgba(0,0,0,.05);transition:all .2s ease} .card:hover{box-shadow:0 4px 12px rgba(0,0,0,.08);transform:translateY(-2px)} .tabBtn{transition:all .2s ease} .tabBtn.bg-yellow-400{box-shadow:0 2px 8px rgba(255,213,79,.3);font-weight:600} .empty-state{border:1px dashed #e5e7eb;border-radius:12px;padding:24px;text-align:center;color:#6b7280} .toggle-switch{position:relative;display:inline-block;width:52px;height:28px} .toggle-switch input{opacity:0;width:0;height:0} .toggle-slider{position:absolute;cursor:pointer;top:0;left:0;right:0;bottom:0;background-color:#d1d5db;transition:.3s;border-radius:28px} .toggle-slider:before{position:absolute;content:"";height:22px;width:22px;left:3px;bottom:3px;background-color:#fff;transition:.3s;border-radius:50%} .toggle-switch input:checked + .toggle-slider{background-color:#10B981} .toggle-switch input:checked + .toggle-slider:before{transform:translateX(24px)}</style></head><body class="min-h-screen bg-gray-50">
-<div class="flex min-h-screen">
-  <aside class="hidden md:block w-72 bg-white border-r border-gray-200">
-    <div class="p-6 border-b border-gray-100">
-      <div class="flex items-center gap-3">
-        <img src="/images/VITato.png" alt="logo" class="w-10 h-10 rounded-md shadow-sm"/>
-        <div>
-          <div class="text-lg font-bold text-gray-900">VITato</div>
-          <div class="text-xs text-gray-500">Student Dashboard</div>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+  <meta http-equiv="Pragma" content="no-cache" />
+  <meta http-equiv="Expires" content="0" />
+  <title>Student Dashboard - VIT-Bolt</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            'poppins': ['Poppins', 'sans-serif']
+          },
+          colors: {
+            'brand-yellow': '#F59E0B',
+            'brand-dark': '#D97706',
+            'brand-light': '#FCD34D'
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Poppins', sans-serif;
+      background: linear-gradient(135deg, #FFFBEB 0%, #FEF3C7 50%, #FDE68A 100%);
+      min-height: 100vh;
+    }
+
+    /* Smooth Animations */
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes slideInLeft {
+      from {
+        opacity: 0;
+        transform: translateX(-50px);
+      }
+      to {
+        opacity: 1;
+        transform: translateX(0);
+      }
+    }
+
+    @keyframes slideInRight {
+      from {
+        opacity: 0;
+        transform: translateX(50px);
+      }
+      to {
+        opacity: 1;
+        transform: translateX(0);
+      }
+    }
+
+    .animate-fade-in-up {
+      animation: fadeInUp 0.8s ease-out forwards;
+    }
+
+    .animate-slide-in-left {
+      animation: slideInLeft 0.8s ease-out forwards;
+    }
+
+    .animate-slide-in-right {
+      animation: slideInRight 0.8s ease-out forwards;
+    }
+
+    /* Card Hover Effects */
+    .dashboard-card {
+      transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+      background: white;
+      border: 2px solid transparent;
+    }
+
+    .dashboard-card:hover {
+      transform: translateY(-8px) scale(1.02);
+      box-shadow: 0 25px 50px -12px rgba(245, 158, 11, 0.25);
+      border-color: rgba(245, 158, 11, 0.3);
+    }
+
+    /* Button Styles */
+    .btn-primary {
+      background: linear-gradient(135deg, #F59E0B 0%, #D97706 100%);
+      box-shadow: 0 10px 30px rgba(245, 158, 11, 0.4);
+      transition: all 0.3s ease;
+    }
+
+    .btn-primary:hover {
+      box-shadow: 0 15px 40px rgba(245, 158, 11, 0.5);
+      transform: translateY(-3px);
+    }
+
+    .btn-secondary {
+      border: 2px solid #F59E0B;
+      color: #D97706;
+      transition: all 0.3s ease;
+    }
+
+    .btn-secondary:hover {
+      background: #FEF3C7;
+      transform: translateY(-2px);
+    }
+
+    /* Tab Styles */
+    .tab-btn {
+      transition: all 0.3s ease;
+      position: relative;
+    }
+
+    .tab-btn::after {
+      content: '';
+      position: absolute;
+      bottom: -4px;
+      left: 50%;
+      width: 0;
+      height: 3px;
+      background: linear-gradient(90deg, #F59E0B, #D97706);
+      border-radius: 2px;
+      transition: all 0.3s ease;
+      transform: translateX(-50%);
+    }
+
+    .tab-btn.active::after {
+      width: 100%;
+    }
+
+    .tab-btn.active {
+      color: #D97706;
+      font-weight: 600;
+    }
+
+    /* Status badges */
+    .status-pending {
+      background: linear-gradient(135deg, #FBBF24 0%, #F59E0B 100%);
+    }
+
+    .status-preparing {
+      background: linear-gradient(135deg, #3B82F6 0%, #2563EB 100%);
+    }
+
+    .status-ready {
+      background: linear-gradient(135deg, #10B981 0%, #059669 100%);
+    }
+
+    .status-delivered {
+      background: linear-gradient(135deg, #6B7280 0%, #4B5563 100%);
+    }
+
+    /* Toggle switch */
+    .toggle-switch {
+      position: relative;
+      display: inline-block;
+      width: 52px;
+      height: 28px;
+    }
+
+    .toggle-switch input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+
+    .toggle-slider {
+      position: absolute;
+      cursor: pointer;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: #d1d5db;
+      transition: .3s;
+      border-radius: 28px;
+    }
+
+    .toggle-slider:before {
+      position: absolute;
+      content: "";
+      height: 22px;
+      width: 22px;
+      left: 3px;
+      bottom: 3px;
+      background-color: #fff;
+      transition: .3s;
+      border-radius: 50%;
+    }
+
+    .toggle-switch input:checked + .toggle-slider {
+      background-color: #F59E0B;
+    }
+
+    .toggle-switch input:checked + .toggle-slider:before {
+      transform: translateX(24px);
+    }
+
+    /* Mobile responsiveness */
+    @media (max-width: 768px) {
+      .dashboard-card:hover {
+        transform: translateY(-4px) scale(1.01);
+      }
+    }
+  </style>
+</head><body class="min-h-screen">
+
+  <!-- Header -->
+  <header class="fixed top-0 left-0 right-0 bg-white/95 backdrop-blur-lg shadow-sm z-50">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex items-center justify-between h-20">
+
+        <!-- Logo -->
+        <div class="flex items-center space-x-3">
+          <div class="text-4xl">🍔</div>
+          <div>
+            <h1 class="text-2xl font-bold text-gray-900">VIT-Bolt</h1>
+            <p class="text-xs text-gray-600 -mt-1">Student Dashboard</p>
+          </div>
+        </div>
+
+        <!-- Navigation Tabs -->
+        <nav class="hidden md:flex items-center space-x-6">
+          <button class="tab-btn text-sm font-semibold text-gray-700 hover:text-brand-yellow pb-1 active" data-tab="overview">Overview</button>
+          <a href="/menu.html" class="text-sm font-semibold text-gray-700 hover:text-brand-yellow pb-1 transition-colors">Menu</a>
+          <a href="/addresses.html" class="text-sm font-semibold text-gray-700 hover:text-brand-yellow pb-1 transition-colors">Addresses</a>
+          <button class="tab-btn text-sm font-semibold text-gray-700 hover:text-brand-yellow pb-1" data-tab="history">History</button>
+          <button class="tab-btn text-sm font-semibold text-gray-700 hover:text-brand-yellow pb-1" data-tab="settings">Settings</button>
+        </nav>
+
+        <!-- Mobile Menu & Logout -->
+        <div class="flex items-center space-x-3">
+          <button id="mobileMenuBtn" class="md:hidden p-2 text-gray-700 hover:text-brand-yellow">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
+            </svg>
+          </button>
+          <button id="logoutBtn" class="btn-primary px-4 py-2 text-sm font-bold text-white rounded-full">
+            Logout
+          </button>
         </div>
       </div>
     </div>
-    <nav class="p-4">
-      <div id="studentTabs" class="space-y-2">
-        <button data-tab="overview" class="tabBtn bg-yellow-400 text-gray-900 w-full text-left px-4 py-3 rounded-lg text-sm font-medium">Overview</button>
-        <button data-tab="history" class="tabBtn bg-white border border-gray-300 w-full text-left px-4 py-3 rounded-lg text-sm">Order History</button>
-        <button data-tab="addresses" class="tabBtn bg-white border border-gray-300 w-full text-left px-4 py-3 rounded-lg text-sm">Saved Addresses</button>
-        <button data-tab="menu" class="tabBtn bg-white border border-gray-300 w-full text-left px-4 py-3 rounded-lg text-sm">Menu</button>
+
+    <!-- Mobile Navigation -->
+    <div id="mobileDropdown" class="md:hidden hidden bg-white border-t border-gray-200 px-4 py-3">
+      <div class="space-y-2">
+        <button class="tab-btn block w-full text-left py-2 text-sm font-semibold text-gray-700 hover:text-brand-yellow" data-tab="overview">Overview</button>
+        <a href="/menu.html" class="block w-full text-left py-2 text-sm font-semibold text-gray-700 hover:text-brand-yellow transition-colors">Menu</a>
+        <a href="/addresses.html" class="block w-full text-left py-2 text-sm font-semibold text-gray-700 hover:text-brand-yellow transition-colors">Addresses</a>
+        <button class="tab-btn block w-full text-left py-2 text-sm font-semibold text-gray-700 hover:text-brand-yellow" data-tab="history">History</button>
+        <button class="tab-btn block w-full text-left py-2 text-sm font-semibold text-gray-700 hover:text-brand-yellow" data-tab="settings">Settings</button>
       </div>
-    </nav>
-    <div class="absolute bottom-0 w-72 p-4 border-t border-gray-100">
-      <button id="logoutBtn" class="w-full text-sm text-gray-700 bg-gray-50 hover:bg-gray-100 rounded-md py-2 font-medium transition">Logout</button>
     </div>
-  </aside>
-  <main class="flex-1 p-6">
-    <nav class="mb-4 bg-white border border-gray-200 rounded-md p-3 flex items-center justify-between sticky top-0 z-30">
-      <a href="/student.html" class="font-bold text-gray-900">VITato</a>
-      <div class="flex items-center gap-4 text-sm">
-        <a href="/student.html" class="underline">Dashboard</a>
-        <a href="/menu.html">Menu</a>
-        <a href="/track.html">Track</a>
-        <button id="logoutBtn" class="text-gray-700">Logout</button>
+  </header>
+  <!-- Main Content -->
+  <main class="pt-24 pb-12">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+
+      <!-- Page Header -->
+      <div class="text-center mb-12 animate-fade-in-up">
+        <h2 class="text-4xl sm:text-5xl font-black text-gray-900 mb-4">Student Dashboard</h2>
+        <p class="text-xl text-gray-700 font-medium">Track your orders and manage your account</p>
       </div>
-    </nav>
-    <header class="mb-6">
-      <h1 class="text-2xl font-extrabold text-gray-900">Student Overview</h1>
-      <p class="text-sm text-gray-500">Track orders and manage your addresses</p>
-    </header>
-    <div id="tabContent" class="space-y-8">
-      <section data-panel="overview" class="panel">
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <div class="card p-6">
-            <h2 class="text-lg font-semibold mb-3">Active Order</h2>
-            <div id="activeOrder" class="text-sm text-gray-600">No active order.</div>
-          </div>
-          <div class="card p-6">
-            <h3 class="text-lg font-semibold mb-3">Recent Orders</h3>
-            <div id="recentOrders" class="grid gap-4 sm:grid-cols-2 md:grid-cols-2"></div>
-          </div>
-        </div>
-        <div class="mt-6 card p-6 space-y-4">
-          <h3 class="text-lg font-semibold text-gray-900">Notifications</h3>
-          <div class="flex items-center justify-between">
-            <div>
-              <div class="font-medium text-gray-800">Enable toasts</div>
-              <div class="text-xs text-gray-500">Show pop-up notifications for events</div>
+
+      <!-- Tab Content -->
+      <div id="tabContent" class="space-y-8">
+
+        <!-- Overview Section -->
+        <section data-panel="overview" class="panel">
+          <!-- Quick Stats -->
+          <div id="studentStats" class="grid grid-cols-2 md:grid-cols-4 gap-6 mb-8 animate-fade-in-up"></div>
+
+          <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <!-- Active Order -->
+            <div class="dashboard-card rounded-3xl p-8 shadow-lg animate-slide-in-left">
+              <div class="flex items-center mb-6">
+                <div class="w-12 h-12 bg-gradient-to-br from-green-400 to-green-500 rounded-xl flex items-center justify-center mr-4">
+                  <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                  </svg>
+                </div>
+                <h3 class="text-2xl font-bold text-gray-900">Active Order</h3>
+              </div>
+              <div id="activeOrder" class="text-gray-600">No active order.</div>
             </div>
-            <label class="toggle-switch"><input id="toastEnabled" type="checkbox" /><span class="toggle-slider"></span></label>
-          </div>
-          <div class="flex items-center justify-between">
-            <div>
-              <div class="font-medium text-gray-800">Play sound</div>
-              <div class="text-xs text-gray-500">Play a short sound when showing a toast</div>
+
+            <!-- Recent Orders -->
+            <div class="dashboard-card rounded-3xl p-8 shadow-lg animate-slide-in-right">
+              <div class="flex items-center mb-6">
+                <div class="w-12 h-12 bg-gradient-to-br from-brand-yellow to-brand-dark rounded-xl flex items-center justify-center mr-4">
+                  <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
+                  </svg>
+                </div>
+                <h3 class="text-2xl font-bold text-gray-900">Recent Orders</h3>
+              </div>
+              <div id="recentOrders" class="space-y-4"></div>
             </div>
-            <label class="toggle-switch"><input id="toastSound" type="checkbox" /><span class="toggle-slider"></span></label>
           </div>
-          <div class="flex items-center justify-between">
-            <div>
-              <div class="font-medium text-gray-800">Duration</div>
-              <div class="text-xs text-gray-500">How long toasts stay visible (ms)</div>
+        </section>
+        <!-- Order History Section -->
+        <section data-panel="history" class="panel hidden">
+          <div class="dashboard-card rounded-3xl p-8 shadow-lg animate-fade-in-up">
+            <div class="flex items-center mb-6">
+              <div class="w-12 h-12 bg-gradient-to-br from-purple-400 to-purple-500 rounded-xl flex items-center justify-center mr-4">
+                <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"></path>
+                </svg>
+              </div>
+              <h3 class="text-2xl font-bold text-gray-900">Order History</h3>
             </div>
-            <input id="toastDuration" type="number" min="1000" max="15000" step="500" class="w-32 border border-gray-300 rounded-lg p-2 text-sm" />
+            <div id="orderHistory" class="grid gap-6 sm:grid-cols-2 lg:grid-cols-3"></div>
           </div>
-          <div class="pt-2">
-            <button id="toastSave" class="btn btn-primary btn-sm bg-yellow-400 hover:bg-yellow-300 text-gray-900 px-3 py-1.5 rounded">Save</button>
-            <button id="toastTest" class="btn btn-secondary btn-sm border border-gray-300 px-3 py-1.5 rounded">Test toast</button>
+        </section>
+
+        <!-- Settings Section -->
+        <section data-panel="settings" class="panel hidden">
+          <div class="dashboard-card rounded-3xl p-8 shadow-lg animate-fade-in-up space-y-8">
+            
+            <!-- Notifications Settings -->
+            <div>
+              <div class="flex items-center mb-6">
+                <div class="w-12 h-12 bg-gradient-to-br from-indigo-400 to-indigo-500 rounded-xl flex items-center justify-center mr-4">
+                  <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-5 5-5-5h5v-5a7.5 7.5 0 00-15 0v5h5m5 0v5"></path>
+                  </svg>
+                </div>
+                <h3 class="text-2xl font-bold text-gray-900">Notification Settings</h3>
+              </div>
+              
+              <div class="grid sm:grid-cols-2 gap-6">
+                <div class="bg-gray-50 rounded-2xl p-6 border-2 border-gray-100">
+                  <div class="flex items-center justify-between">
+                    <div>
+                      <h4 class="font-bold text-gray-800 mb-1">Enable Notifications</h4>
+                      <p class="text-sm text-gray-600">Show pop-up notifications for events</p>
+                    </div>
+                    <label class="toggle-switch">
+                      <input id="toastEnabled" type="checkbox" />
+                      <span class="toggle-slider"></span>
+                    </label>
+                  </div>
+                </div>
+                
+                <div class="bg-gray-50 rounded-2xl p-6 border-2 border-gray-100">
+                  <div class="flex items-center justify-between">
+                    <div>
+                      <h4 class="font-bold text-gray-800 mb-1">Sound Alerts</h4>
+                      <p class="text-sm text-gray-600">Play sound with notifications</p>
+                    </div>
+                    <label class="toggle-switch">
+                      <input id="toastSound" type="checkbox" />
+                      <span class="toggle-slider"></span>
+                    </label>
+                  </div>
+                </div>
+                
+                <div class="bg-gray-50 rounded-2xl p-6 border-2 border-gray-100 sm:col-span-2">
+                  <div class="flex items-center justify-between">
+                    <div>
+                      <h4 class="font-bold text-gray-800 mb-1">Notification Duration</h4>
+                      <p class="text-sm text-gray-600">How long notifications stay visible (ms)</p>
+                    </div>
+                    <input id="toastDuration" type="number" min="1000" max="15000" step="500" class="w-32 border-2 border-gray-200 rounded-xl px-3 py-2 text-sm focus:border-brand-yellow focus:outline-none" />
+                  </div>
+                </div>
+                
+                <div class="sm:col-span-2 flex gap-3">
+                  <button id="toastSave" class="btn-primary px-6 py-3 rounded-xl font-bold text-white">Save Settings</button>
+                  <button id="toastTest" class="btn-secondary px-6 py-3 rounded-xl font-semibold">Test Notification</button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Password Change Section -->
+            <div class="pt-8 border-t border-gray-200">
+              <div class="flex items-center mb-6">
+                <div class="w-12 h-12 bg-gradient-to-br from-gray-400 to-gray-500 rounded-xl flex items-center justify-center mr-4">
+                  <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
+                  </svg>
+                </div>
+                <h3 class="text-2xl font-bold text-gray-900">Change Password</h3>
+              </div>
+              
+              <div class="bg-amber-50 border-2 border-amber-200 rounded-xl p-6">
+                <div class="flex items-start space-x-3">
+                  <div class="w-6 h-6 bg-amber-400 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                    <svg class="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
+                      <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"></path>
+                    </svg>
+                  </div>
+                  <div>
+                    <p class="font-bold text-amber-800 mb-1">Feature Not Available</p>
+                    <p class="text-sm text-amber-700">Password change functionality is not enabled in this prototype version.</p>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
-        </div>
-      </section>
-      <section data-panel="history" class="panel hidden">
-        <div class="card p-6">
-          <h2 class="text-lg font-semibold mb-4">Order History</h2>
-          <div id="orderHistory" class="space-y-3"></div>
-        </div>
-      </section>
-      <section data-panel="addresses" class="panel hidden">
-        <div class="card p-6">
-          <div class="flex items-center justify-between mb-4"><h2 class="text-lg font-semibold">Saved Addresses</h2><button id="addAddressBtn" class="btn text-xs bg-yellow-400 hover:bg-yellow-300 text-gray-900 px-3 py-1.5 rounded">Add</button></div>
-          <div id="addressList" class="grid md:grid-cols-2 gap-4"></div>
-          <div id="addressEmpty" class="text-xs text-gray-500 hidden">No addresses added.</div>
-        </div>
-      </section>
-      <section data-panel="menu" class="panel hidden">
-        <div class="card p-6">
-          <h2 class="text-lg font-semibold mb-3">Browse Menu</h2>
-          <iframe src="/menu.html" class="w-full h-[600px] rounded-md border border-gray-200 bg-white"></iframe>
-        </div>
-      </section>
+        </section>
+
+      </div>
     </div>
   </main>
+  <!-- Address Modal -->
+  <div id="addressModal" class="fixed inset-0 bg-black/30 backdrop-blur-sm hidden items-center justify-center p-4 z-50">
+    <div class="bg-white rounded-3xl shadow-2xl w-full max-w-md p-8 relative animate-fade-in-up">
+      <button id="addressModalClose" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600 text-2xl font-bold">✕</button>
+      
+      <div class="text-center mb-6">
+        <div class="w-16 h-16 bg-gradient-to-br from-blue-400 to-blue-500 rounded-2xl flex items-center justify-center mx-auto mb-4">
+          <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
+          </svg>
+        </div>
+        <h3 id="addressModalTitle" class="text-2xl font-bold text-gray-900">Add Address</h3>
+      </div>
+
+      <form id="addressForm" class="space-y-4">
+        <input type="hidden" name="id" />
+        <div>
+          <label class="block text-sm font-semibold text-gray-700 mb-2">Label</label>
+          <input name="label" type="text" class="w-full border-2 border-gray-200 rounded-xl px-4 py-3 focus:border-brand-yellow focus:outline-none transition-all" placeholder="Hostel / Block" />
+        </div>
+        <div>
+          <label class="block text-sm font-semibold text-gray-700 mb-2">Address Line 1</label>
+          <input name="line1" type="text" class="w-full border-2 border-gray-200 rounded-xl px-4 py-3 focus:border-brand-yellow focus:outline-none transition-all" required />
+        </div>
+        <div>
+          <label class="block text-sm font-semibold text-gray-700 mb-2">Address Line 2 (optional)</label>
+          <input name="line2" type="text" class="w-full border-2 border-gray-200 rounded-xl px-4 py-3 focus:border-brand-yellow focus:outline-none transition-all" />
+        </div>
+        <div>
+          <label class="block text-sm font-semibold text-gray-700 mb-2">Landmark (optional)</label>
+          <input name="landmark" type="text" class="w-full border-2 border-gray-200 rounded-xl px-4 py-3 focus:border-brand-yellow focus:outline-none transition-all" />
+        </div>
+        <div class="flex gap-3 pt-4">
+          <button type="button" id="addressCancel" class="flex-1 btn-secondary py-3 rounded-xl font-semibold">Cancel</button>
+          <button type="submit" class="flex-1 btn-primary py-3 rounded-xl font-bold text-white">Save Address</button>
+        </div>
+        <div id="addressFormMsg" class="text-sm text-red-600 text-center"></div>
+      </form>
+    </div>
   </div>
-<script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
-<script src="/js/transitions.js"></script>
-<script src="/js/auth.js"></script>
-<script src="/js/toast.js"></script>
-<script src="/js/student.js"></script>
-<script>
-  // Toast settings wiring (student)
-  (function(){
-    try {
-      const enabledEl = document.getElementById('toastEnabled');
-      const soundEl = document.getElementById('toastSound');
-      const durEl = document.getElementById('toastDuration');
-      const saveBtn = document.getElementById('toastSave');
-      const testBtn = document.getElementById('toastTest');
-      if (window.toast && enabledEl && soundEl && durEl) {
-        window.toast.loadConfig && window.toast.loadConfig();
-        enabledEl.checked = !!window.toast.enabled;
-        soundEl.checked = !!window.toast.sound;
-        durEl.value = window.toast.defaultDuration || 3500;
-        saveBtn?.addEventListener('click', () => {
-          const duration = Math.max(1000, Math.min(15000, parseInt(durEl.value || '3500', 10)));
-          window.toast.setConfig({ enabled: enabledEl.checked, sound: soundEl.checked, duration });
-          window.toast.success('Saved toast preferences');
+  <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
+  <script src="/js/transitions.js"></script>
+  <script src="/js/auth.js"></script>
+  <script src="/js/toast.js"></script>
+  <script src="/js/student.js"></script>
+  <script src="/js/menu.js"></script>
+
+  <!-- Enhanced UI Scripts -->
+  <script>
+    // Enhanced Tab Management
+    document.addEventListener('DOMContentLoaded', function() {
+      const tabButtons = document.querySelectorAll('.tab-btn');
+      const panels = document.querySelectorAll('.panel');
+      const mobileMenuBtn = document.getElementById('mobileMenuBtn');
+      const mobileDropdown = document.getElementById('mobileDropdown');
+
+      // Tab switching functionality
+      function switchTab(targetTab) {
+        // Update tab buttons
+        tabButtons.forEach(btn => {
+          btn.classList.remove('active');
+          if (btn.dataset.tab === targetTab) {
+            btn.classList.add('active');
+          }
         });
-        testBtn?.addEventListener('click', () => window.toast.info('This is a test toast'));
+
+        // Update panels
+        panels.forEach(panel => {
+          panel.classList.add('hidden');
+          if (panel.dataset.panel === targetTab) {
+            panel.classList.remove('hidden');
+            // Add entrance animation
+            panel.style.opacity = '0';
+            panel.style.transform = 'translateY(20px)';
+            requestAnimationFrame(() => {
+              panel.style.transition = 'opacity 0.5s ease, transform 0.5s ease';
+              panel.style.opacity = '1';
+              panel.style.transform = 'translateY(0)';
+            });
+          }
+        });
+
+        // Close mobile menu
+        mobileDropdown.classList.add('hidden');
       }
-    } catch {}
-  })();
-</script>
+
+      // Add click listeners to tab buttons
+      tabButtons.forEach(button => {
+        button.addEventListener('click', () => {
+          const tab = button.dataset.tab;
+          switchTab(tab);
+        });
+      });
+
+      // Mobile menu toggle
+      mobileMenuBtn.addEventListener('click', () => {
+        mobileDropdown.classList.toggle('hidden');
+      });
+
+      // Enhanced card hover effects
+      const observerOptions = {
+        threshold: 0.1,
+        rootMargin: '0px 0px -50px 0px'
+      };
+      
+      const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting) {
+            entry.target.style.opacity = '1';
+            entry.target.style.transform = 'translateY(0)';
+          }
+        });
+      }, observerOptions);
+      
+      // Initialize animations
+      const animatedElements = document.querySelectorAll('.animate-fade-in-up, .animate-slide-in-left, .animate-slide-in-right');
+      animatedElements.forEach(el => {
+        el.style.opacity = '0';
+        el.style.transform = 'translateY(40px)';
+        el.style.transition = 'opacity 1s ease, transform 1s ease';
+        observer.observe(el);
+      });
+      
+      // Add premium hover effects to dashboard cards
+      const dashboardCards = document.querySelectorAll('.dashboard-card');
+      dashboardCards.forEach(card => {
+        card.addEventListener('mouseenter', () => {
+          card.style.transform = 'translateY(-8px) scale(1.02)';
+        });
+        card.addEventListener('mouseleave', () => {
+          card.style.transform = 'translateY(0) scale(1)';
+        });
+      });
+
+      // Initialize default tab
+      switchTab('overview');
+    });
+
+    // Toast settings functionality
+    (function(){
+      try {
+        const enabledEl = document.getElementById('toastEnabled');
+        const soundEl = document.getElementById('toastSound');
+        const durEl = document.getElementById('toastDuration');
+        const saveBtn = document.getElementById('toastSave');
+        const testBtn = document.getElementById('toastTest');
+        
+        if (window.toast && enabledEl && soundEl && durEl) {
+          window.toast.loadConfig && window.toast.loadConfig();
+          enabledEl.checked = !!window.toast.enabled;
+          soundEl.checked = !!window.toast.sound;
+          durEl.value = window.toast.defaultDuration || 3500;
+          
+          saveBtn?.addEventListener('click', () => {
+            const duration = Math.max(1000, Math.min(15000, parseInt(durEl.value || '3500', 10)));
+            window.toast.setConfig({ enabled: enabledEl.checked, sound: soundEl.checked, duration });
+            window.toast.success('✅ Toast preferences saved successfully!');
+          });
+          
+          testBtn?.addEventListener('click', () => window.toast.info('🔔 This is a test notification!'));
+        }
+      } catch(e) {
+        console.log('Toast configuration not available');
+      }
+    })();
+  </script>
 </body></html>

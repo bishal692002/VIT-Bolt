@@ -28,6 +28,8 @@ FROM base AS prod-deps
 # Ensure prod-only install in this stage
 ENV NODE_ENV=production
 COPY package*.json ./
+# Install build tools for native modules (e.g., bcrypt) on Alpine
+RUN apk add --no-cache python3 make g++
 RUN if [ -f package-lock.json ]; then npm ci --omit=dev; else npm install --omit=dev; fi
 
 # ---- Final runtime image ----
@@ -35,8 +37,8 @@ FROM node:20-alpine AS runtime
 WORKDIR /app
 ENV NODE_ENV=production
 
-# Create non-root user (node user already exists in image)
-USER node
+# Note: run as root to ensure write access to mounted volumes like /app/public/uploads
+# If you prefer running as non-root, ensure the volume directory is chowned to the node user at runtime.
 
 # Copy production node_modules
 COPY --chown=node:node --from=prod-deps /app/node_modules ./node_modules

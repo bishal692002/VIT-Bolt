@@ -552,3 +552,69 @@ router.get('/export/:collection', adminAuth, async (req, res) => {
 });
 
 export default router;
+
+// --- Admin utilities: Purge a vendor and associated data (food items, vendor user) ---
+// Usage (requires admin token):
+//   DELETE /admin/vendors/purge?name=Cafeteria%20Central
+// Optional flags:
+//   dry=1  -> simulate only, do not delete
+router.delete('/vendors/purge', adminAuth, async (req, res) => {
+  try {
+    const { name } = req.query;
+    const dry = req.query.dry === '1' || req.query.dry === 'true';
+    if (!name || !String(name).trim()) {
+      return res.status(400).json({ error: 'Provide vendor name via ?name=' });
+    }
+    const rx = new RegExp('^' + String(name).trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '$', 'i');
+    const vendor = await Vendor.findOne({ name: rx });
+    if (!vendor) return res.status(404).json({ error: 'Vendor not found' });
+
+    // Find linked vendor user(s)
+    const users = await User.find({ vendor: vendor._id });
+
+    // Gather food items and images to possibly remove
+    const items = await FoodItem.find({ vendor: vendor._id });
+    const itemIds = items.map(i => i._id);
+    const uploadImages = items
+      .map(i => i.image)
+      .filter(p => typeof p === 'string' && p.startsWith('/uploads/'));
+
+    const summary = {
+      vendorId: vendor._id.toString(),
+      vendorName: vendor.name,
+      users: users.map(u => ({ id: u._id.toString(), email: u.email })),
+      foodItems: items.length,
+      willDeleteUploads: uploadImages.length,
+      dryRun: dry
+    };
+
+    if (dry) return res.json({ ok: true, ...summary });
+
+    // Delete food items
+    await FoodItem.deleteMany({ vendor: vendor._id });
+
+    // Best-effort remove local upload files referenced by items
+    try {
+      const fs = await import('fs');
+      const path = await import('path');
+      for (const rel of uploadImages) {
+        try {
+          const p = path.default.join(process.cwd(), 'public', rel.replace(/^\/+/, ''));
+          if (fs.default.existsSync(p)) fs.default.unlinkSync(p);
+        } catch {}
+      }
+    } catch {}
+
+    // Delete linked vendor users
+    await User.deleteMany({ vendor: vendor._id });
+
+    // Finally delete vendor
+    await Vendor.deleteOne({ _id: vendor._id });
+
+    // Note: We do NOT delete historical orders; items may no longer populate but UI falls back safely.
+    res.json({ ok: true, ...summary });
+  } catch (e) {
+    console.error('Purge vendor error:', e);
+    res.status(500).json({ error: 'Failed to purge vendor: ' + e.message });
+  }
+});

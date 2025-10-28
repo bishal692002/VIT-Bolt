@@ -46,11 +46,41 @@ router.get('/profile', ensureAuth, requireVendor, async (req, res) => {
       name: req.user.name,
       email: req.user.email,
       phone: vendor.phone,
-      address: vendor.address
+      address: vendor.address,
+      isOnline: vendor.isOnline !== false // Default to true if not set
     });
   } catch (error) {
     console.error('Error fetching vendor profile:', error);
     res.status(500).json({ error: 'Failed to fetch profile' });
+  }
+});
+
+// Update vendor online status
+router.put('/status', ensureAuth, requireVendor, async (req, res) => {
+  try {
+    const vendor = await resolveVendor(req);
+    if (!vendor) {
+      return res.status(404).json({ error: 'Vendor not found' });
+    }
+
+    const { isOnline } = req.body;
+    if (typeof isOnline !== 'boolean') {
+      return res.status(400).json({ error: 'isOnline must be a boolean' });
+    }
+
+    vendor.isOnline = isOnline;
+    await vendor.save();
+
+    console.log(`Vendor ${vendor.name || vendor._id} status updated to: ${isOnline ? 'Online' : 'Offline'}`);
+    
+    res.json({ 
+      success: true, 
+      isOnline: vendor.isOnline,
+      message: `Vendor is now ${isOnline ? 'online' : 'offline'}` 
+    });
+  } catch (error) {
+    console.error('Error updating vendor status:', error);
+    res.status(500).json({ error: 'Failed to update vendor status' });
   }
 });
 

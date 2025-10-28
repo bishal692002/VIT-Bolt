@@ -17,6 +17,8 @@ services:
       - RAZORPAY_KEY_ID=${RAZORPAY_KEY_ID:-}
       - RAZORPAY_KEY_SECRET=${RAZORPAY_KEY_SECRET:-}
       - RAZORPAY_WEBHOOK_SECRET=${RAZORPAY_WEBHOOK_SECRET:-}
+      - AUTOCANCEL_MINUTES=${AUTOCANCEL_MINUTES:-20}
+      - FAULTY_CLEANUP_HOURS=${FAULTY_CLEANUP_HOURS:-24}
     depends_on:
       - mongo
     restart: unless-stopped
@@ -26,7 +28,7 @@ services:
 
   mongo:
     image: mongo:6.0
-    container_name: vitato-mongo
+    container_name: vit-bolt-mongo
     restart: unless-stopped
     ports:
       - "27017:27017"

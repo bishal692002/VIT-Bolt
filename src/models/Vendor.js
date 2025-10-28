@@ -6,6 +6,7 @@ const vendorSchema = new mongoose.Schema({
   categories: [String],
   image: String,
   isActive: { type: Boolean, default: true },
+  isOnline: { type: Boolean, default: true },
   contactEmail: String,
   contactPhone: String,
   address: String,

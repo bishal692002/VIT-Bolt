@@ -98,14 +98,67 @@
       if (!res.ok) {
         await fetchMenu(); // revert on error
         alert('Failed to update stock status');
-      } else {
-        showVendorNotification(inStock ? 'Item marked as in stock' : 'Item marked as out of stock');
       }
-    } catch {
-      await fetchMenu();
-      alert('Network error');
+    } catch (error) {
+      console.error('Error updating stock status:', error);
+      await fetchMenu(); // revert on error
+      alert('Failed to update stock status');
     }
   };
+
+  // Vendor status toggle functionality
+  const vendorStatusToggle = document.getElementById('vendorStatusToggle');
+  const statusText = document.getElementById('statusText');
+  
+  async function toggleVendorStatus(isOnline) {
+    try {
+      const res = await fetch('/api/vendor/status', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + token },
+        body: JSON.stringify({ isOnline })
+      });
+      
+      if (res.ok) {
+        statusText.textContent = isOnline ? 'Online' : 'Offline';
+        statusText.className = `text-sm font-semibold ${isOnline ? 'text-green-600' : 'text-red-600'}`;
+        console.log('Vendor status updated to:', isOnline ? 'Online' : 'Offline');
+      } else {
+        console.error('Failed to update vendor status');
+        // Revert the toggle
+        vendorStatusToggle.checked = !isOnline;
+        alert('Failed to update vendor status');
+      }
+    } catch (error) {
+      console.error('Error updating vendor status:', error);
+      // Revert the toggle
+      vendorStatusToggle.checked = !isOnline;
+      alert('Failed to update vendor status');
+    }
+  }
+
+  // Add event listener for vendor status toggle
+  vendorStatusToggle?.addEventListener('change', (e) => {
+    toggleVendorStatus(e.target.checked);
+  });
+
+  // Function to load current vendor status
+  async function loadVendorStatus() {
+    try {
+      const res = await fetch('/api/vendor/profile', {
+        headers: { Authorization: 'Bearer ' + token }
+      });
+      
+      if (res.ok) {
+        const vendor = await res.json();
+        const isOnline = vendor.isOnline !== false; // Default to true if not set
+        vendorStatusToggle.checked = isOnline;
+        statusText.textContent = isOnline ? 'Online' : 'Offline';
+        statusText.className = `text-sm font-semibold ${isOnline ? 'text-green-600' : 'text-red-600'}`;
+      }
+    } catch (error) {
+      console.error('Error loading vendor status:', error);
+    }
+  }
 
   async function fetchOrders(){
     console.log('=== FETCH ORDERS CALLED ===');
@@ -612,6 +665,8 @@
   console.log('=== VENDOR DASHBOARD INITIALIZATION ===');
   fetchMenu();
   console.log('Called fetchMenu()');
+  loadVendorStatus();
+  console.log('Called loadVendorStatus()');
   // Load vendor identity for accurate revenue attribution; don't block initial orders render
   (async () => {
     try {

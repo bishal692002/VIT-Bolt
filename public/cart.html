@@ -3,44 +3,169 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Cart – VITato</title>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <title>Cart – VIT-Bolt</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/css/tailwind.css" />
   <link rel="stylesheet" href="/css/ui-fixes.css" />
-  <style>body{font-family:'Inter',sans-serif;background:#FAFAFA;color:#333}body{opacity:1;transition:opacity .16s ease,transform .24s cubic-bezier(.4,0,.2,1);}body.page-enter{opacity:0;transform:translateY(4px);}body.page-enter-active{opacity:1;transform:translateY(0);}body.page-exit{opacity:0;transform:translateY(-4px);} </style>
+  <style>
+    body {
+      font-family: 'Poppins', sans-serif;
+      background: linear-gradient(135deg, #FFFBEB 0%, #FEF3C7 50%, #FDE68A 100%);
+      min-height: 100vh;
+      position: relative;
+    }
+
+    body::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-image:
+        radial-gradient(circle at 20% 30%, rgba(245, 158, 11, 0.1) 0%, transparent 50%),
+        radial-gradient(circle at 80% 70%, rgba(217, 119, 6, 0.1) 0%, transparent 50%);
+      pointer-events: none;
+      z-index: 0;
+    }
+  </style>
 </head>
-<body class="min-h-full flex flex-col">
-  <nav class="w-full bg-white border-b border-gray-200 px-4 py-3 flex items-center justify-between">
-    <a href="/menu.html" class="font-bold text-lg">VITato</a>
-    <div class="flex items-center space-x-4">
-      <a href="/menu.html" class="text-sm text-gray-600">Menu</a>
-      <button id="logoutBtn" class="text-sm text-gray-600">Logout</button>
+<body class="min-h-full flex flex-col relative z-10">
+  <nav class="w-full bg-white/95 backdrop-blur-lg shadow-sm border-b border-gray-200 px-4 py-3 flex items-center justify-between relative z-20">
+    <div class="flex items-center gap-3">
+      <button id="mobileMenuBtn" class="md:hidden inline-flex items-center justify-center w-9 h-9 rounded-md border border-gray-300 bg-white hover:bg-gray-50" aria-label="Open menu" aria-controls="mobileDrawer" aria-expanded="false">
+        <svg class="w-5 h-5 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
+      </button>
+      <a href="/student.html" class="font-bold text-xl text-gray-900">🛒 VIT-Bolt Cart</a>
+    </div>
+    <div class="flex items-center space-x-8 text-sm font-medium">
+      <a href="/student.html" class="text-gray-700 hover:text-yellow-600 transition-colors px-2">Dashboard</a>
+      <a href="/menu.html" class="text-gray-700 hover:text-yellow-600 transition-colors px-2">Menu</a>
+      <button id="logoutBtn" class="text-gray-700 hover:text-yellow-600 transition-colors px-2">Logout</button>
     </div>
   </nav>
-  <main class="flex-1 max-w-3xl mx-auto w-full px-5 py-8">
-    <h1 class="text-2xl font-semibold mb-6">Your Cart</h1>
+  <main class="flex-1 max-w-3xl mx-auto w-full px-5 py-8 relative z-10">
+    <h1 class="text-3xl font-bold text-gray-900 mb-8 text-center">Your Cart</h1>
     <div id="cartItems" class="space-y-4"></div>
-  <div id="cartSummary" class="mt-8 p-5 bg-white rounded-lg shadow-sm border border-gray-100 hidden">
-      <div id="addressSection" class="mb-5">
-        <div class="flex items-center justify-between mb-2">
-          <h2 class="font-medium text-sm">Delivery Address</h2>
-          <button id="addAddrBtn" class="text-xs text-yellow-700 hover:underline">Add</button>
+  <div id="cartSummary" class="mt-8 p-6 bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl border border-white/20 hidden">
+      <div id="addressSection" class="mb-6">
+        <h2 class="font-semibold text-lg text-gray-900 flex items-center mb-4">
+          <span class="text-xl mr-2">📍</span>
+          Delivery Address
+        </h2>
+        
+        <!-- Selected Address Display -->
+        <div id="selectedAddressDisplay" class="border-2 border-yellow-200 rounded-xl p-4 bg-yellow-50/50 hidden">
+          <div class="flex items-start justify-between">
+            <div class="flex-1">
+              <div class="font-semibold text-gray-900 mb-1" id="selectedAddressLabel">Home</div>
+              <div class="text-sm text-gray-600" id="selectedAddressDetails">
+                123 Main Street, Apartment 4B<br>
+                Near Central Park, City - 12345
+              </div>
+            </div>
+            <button id="changeAddressBtn" class="text-sm text-yellow-700 hover:text-yellow-800 font-medium ml-3">Change</button>
+          </div>
         </div>
-        <div id="addressListCart" class="space-y-2 text-xs"></div>
-        <p id="noAddressMsg" class="text-xs text-gray-500 hidden">No addresses yet. Add one.</p>
+        
+        <div id="noAddressMsg" class="text-center py-8 border-2 border-dashed border-gray-200 rounded-xl bg-gray-50/50 hidden">
+          <span class="text-3xl mb-3 block">📍</span>
+          <h3 class="font-semibold text-gray-900 mb-2">No delivery address selected</h3>
+          <p class="text-gray-600 mb-4 text-sm">Please add or select an address to continue with checkout</p>
+          <div class="flex gap-3 justify-center">
+            <button id="selectAddrBtn" class="bg-yellow-100 text-yellow-700 px-6 py-2 rounded-lg hover:bg-yellow-200 transition-colors font-medium">Select Address</button>
+            <button id="addAddrBtn" class="text-yellow-700 hover:text-yellow-800 font-medium border border-yellow-200 px-6 py-2 rounded-lg hover:bg-yellow-50 transition-colors">+ Add New</button>
+          </div>
+        </div>
       </div>
-      <div class="flex justify-between mb-2 text-sm"><span>Subtotal</span><span id="subtotalAmt">₹0</span></div>
-      <div class="flex justify-between mb-2 text-sm"><span>Delivery Fee</span><span id="deliveryFeeAmt">₹0</span></div>
-      <div class="flex justify-between font-semibold text-lg"><span>Total</span><span id="totalAmt">₹0</span></div>
-  <button id="checkoutBtn" class="mt-5 w-full bg-yellow-400 hover:bg-yellow-300 text-gray-900 font-medium py-3 rounded-md">Checkout</button>
-  <button id="payBtn" class="mt-3 w-full bg-gray-800 hover:bg-gray-700 text-white text-sm font-medium py-2 rounded-md hidden">Pay (Razorpay Test)</button>
+      <div class="border-t border-gray-200 pt-4 space-y-3">
+        <div class="flex justify-between text-gray-700"><span>Subtotal</span><span id="subtotalAmt" class="font-medium">₹0</span></div>
+        <div class="flex justify-between text-gray-700"><span>Delivery Fee</span><span id="deliveryFeeAmt" class="font-medium">₹0</span></div>
+        <div class="flex justify-between font-bold text-xl text-gray-900 border-t border-gray-200 pt-3"><span>Total</span><span id="totalAmt">₹0</span></div>
+      </div>
+  
+  <button id="checkoutBtn" class="mt-6 w-full bg-gradient-to-r from-yellow-400 to-yellow-500 hover:from-yellow-500 hover:to-yellow-600 text-gray-900 font-bold py-4 rounded-xl text-lg transition-all transform hover:scale-105 shadow-lg">
+    🚀 Proceed to Checkout
+  </button>
+  <button id="payBtn" class="mt-3 w-full bg-gray-800 hover:bg-gray-700 text-white font-medium py-3 rounded-xl hidden">Pay (Razorpay Test)</button>
     </div>
   </main>
-  <footer class="py-6 text-center text-sm text-gray-500">© 2025 VITato</footer>
+  <footer class="py-6 text-center text-sm text-gray-600 relative z-10">© 2025 VIT-Bolt</footer>
+  
+  <!-- Address Selection Modal -->
+  <div id="addressModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4 hidden">
+    <div class="bg-white rounded-2xl max-w-md w-full max-h-[80vh] overflow-hidden">
+      <div class="p-6 border-b">
+        <div class="flex items-center justify-between">
+          <h3 class="text-lg font-semibold">Select Delivery Address</h3>
+          <button id="closeAddressModal" class="text-gray-400 hover:text-gray-600">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+            </svg>
+          </button>
+        </div>
+        
+        <!-- Search Bar -->
+        <div class="mt-4">
+          <div class="relative">
+            <input type="text" id="addressSearch" placeholder="Search addresses..." 
+                   class="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-yellow-400 focus:border-transparent">
+            <svg class="w-4 h-4 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+            </svg>
+          </div>
+        </div>
+      </div>
+      
+      <div class="overflow-y-auto max-h-96">
+        <div id="modalAddressList" class="p-4 space-y-3">
+          <!-- Address items will be populated here -->
+        </div>
+        
+        <div id="modalNoAddresses" class="p-8 text-center text-gray-500 hidden">
+          <svg class="w-12 h-12 mx-auto mb-3 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
+          </svg>
+          <p class="font-medium mb-1">No addresses found</p>
+          <p class="text-sm">Add a new address to continue</p>
+        </div>
+      </div>
+      
+      <div class="p-4 border-t bg-gray-50">
+        <button id="addNewAddressFromModal" class="w-full bg-yellow-400 hover:bg-yellow-500 text-gray-900 font-medium py-2 px-4 rounded-lg transition-colors">
+          Add New Address
+        </button>
+      </div>
+    </div>
+  </div>
+  
   <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
   <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
   <script src="/js/transitions.js"></script>
   <script src="/js/auth.js"></script>
+  <!-- Mobile drawer markup -->
+  <div id="mobileDrawer" class="fixed inset-0 z-50 hidden" aria-hidden="true">
+    <div class="absolute inset-0 bg-black/40 transition-opacity opacity-0"></div>
+    <div class="absolute left-0 top-0 h-full w-72 max-w-[80%] bg-white shadow-xl transform transition-transform translate-x-[-100%]" role="dialog" aria-modal="true">
+      <div class="p-4 border-b flex items-center justify-between">
+        <div class="flex items-center gap-2">
+          <img src="/images/VIT-Bolt.png" alt="logo" class="w-6 h-6 rounded"/>
+          <span class="font-semibold">Menu</span>
+        </div>
+        <button id="mobileDrawerClose" class="w-9 h-9 inline-flex items-center justify-center rounded-md border" aria-label="Close menu">✕</button>
+      </div>
+      <nav class="p-3 space-y-2 text-sm">
+        <a href="/student.html" class="block w-full text-left px-4 py-3 rounded-md border hover:bg-gray-50">Dashboard</a>
+        <a href="/menu.html" class="block w-full text-left px-4 py-3 rounded-md border hover:bg-gray-50">Menu</a>
+        <a href="/track.html" class="block w-full text-left px-4 py-3 rounded-md border hover:bg-gray-50">Track Order</a>
+        <a href="/cart.html" class="block w-full text-left px-4 py-3 rounded-md border bg-yellow-100 border-yellow-300">Cart</a>
+        <button id="mobileLogout" class="w-full text-left px-4 py-3 rounded-md border hover:bg-gray-50">Logout</button>
+      </nav>
+    </div>
+  </div>
+  <script src="/js/mobile-nav.js"></script>
   <script src="/js/cart.js"></script>
 </body>
 </html>

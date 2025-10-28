@@ -3,31 +3,303 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Track Order – VITato</title>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+  <meta http-equiv="Pragma" content="no-cache" />
+  <meta http-equiv="Expires" content="0" />
+  <title>Track Order – VIT-Bolt</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  
   <link rel="stylesheet" href="/css/tailwind.css" />
   <link rel="stylesheet" href="/css/ui-fixes.css" />
-  <style>body{font-family:'Inter',sans-serif;background:#FAFAFA;color:#333}body{opacity:1;transition:opacity .16s ease,transform .24s cubic-bezier(.4,0,.2,1);}body.page-enter{opacity:0;transform:translateY(4px);}body.page-enter-active{opacity:1;transform:translateY(0);}body.page-exit{opacity:0;transform:translateY(-4px);} </style>
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            'poppins': ['Poppins', 'sans-serif']
+          },
+          colors: {
+            'brand-yellow': '#F59E0B',
+            'brand-dark': '#D97706',
+            'brand-light': '#FCD34D'
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Poppins', sans-serif;
+      overflow-x: hidden;
+      background: linear-gradient(135deg, #FFFBEB 0%, #FEF3C7 50%, #FDE68A 100%);
+      min-height: 100vh;
+      position: relative;
+    }
+
+    body::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-image:
+        radial-gradient(circle at 20% 30%, rgba(245, 158, 11, 0.1) 0%, transparent 50%),
+        radial-gradient(circle at 80% 70%, rgba(217, 119, 6, 0.1) 0%, transparent 50%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* Smooth Animations */
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes pulse {
+      0%, 100% {
+        box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.7);
+      }
+      50% {
+        box-shadow: 0 0 0 10px rgba(245, 158, 11, 0);
+      }
+    }
+
+    .animate-fade-in-up {
+      animation: fadeInUp 0.6s ease-out forwards;
+      opacity: 0;
+    }
+
+    .animate-pulse-custom {
+      animation: pulse 2s infinite;
+    }
+
+    /* Card Hover Effects */
+    .order-card {
+      transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+      background: white;
+      border: 2px solid transparent;
+    }
+
+    .order-card:hover {
+      transform: translateY(-8px) scale(1.02);
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+      border-color: rgba(245, 158, 11, 0.3);
+    }
+
+    /* Progress Steps */
+    .step-active {
+      background: linear-gradient(135deg, #F59E0B 0%, #D97706 100%);
+      color: white;
+      box-shadow: 0 8px 25px rgba(245, 158, 11, 0.4);
+    }
+
+    .step-inactive {
+      background: #E5E7EB;
+      color: #9CA3AF;
+    }
+
+    .step-completed {
+      background: #10B981;
+      color: white;
+    }
+  </style>
 </head>
-<body class="min-h-full flex flex-col">
-  <nav class="w-full bg-white border-b border-gray-200 px-4 py-3 flex items-center justify-between sticky top-0 z-30">
-    <a href="/student.html" class="font-bold text-lg">VITato</a>
-    <div class="flex items-center space-x-4 text-sm">
-      <a href="/student.html" class="underline">Dashboard</a>
-      <a href="/menu.html">Menu</a>
-      <button id="logoutBtn" class="text-gray-700">Logout</button>
+<body class="min-h-full">
+  <!-- Header -->
+  <header class="fixed top-0 left-0 right-0 bg-white/95 backdrop-blur-lg shadow-sm z-50">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex items-center justify-between h-20">
+
+        <!-- Logo -->
+        <div class="flex items-center space-x-3">
+          <div class="text-4xl">🍔</div>
+          <div>
+            <h1 class="text-2xl font-bold text-gray-900">VIT-Bolt</h1>
+            <p class="text-xs text-gray-600 -mt-1">Track your order</p>
+          </div>
+        </div>
+
+        <!-- Navigation -->
+        <nav class="hidden md:flex items-center space-x-8">
+          <a href="/student.html" class="text-sm font-semibold text-gray-700 hover:text-brand-yellow">Dashboard</a>
+          <a href="/menu.html" class="text-sm font-semibold text-gray-700 hover:text-brand-yellow">Menu</a>
+        </nav>
+
+        <!-- Right Buttons -->
+        <div class="flex items-center space-x-3">
+          <button id="logoutBtn" class="px-4 py-2 text-sm font-medium text-gray-700 hover:text-brand-yellow transition-colors">
+            Logout
+          </button>
+        </div>
+      </div>
     </div>
-  </nav>
-  <main class="flex-1 max-w-2xl mx-auto w-full px-5 py-8">
-    <h1 class="text-2xl font-semibold mb-6">Order Tracking</h1>
-    <div id="orderInfo" class="space-y-4"></div>
-    <div id="statusTimeline" class="mt-8 flex items-center space-x-4"></div>
-    <div id="deliveryPartner" class="mt-8 p-4 bg-white rounded-md shadow-sm border border-gray-100 hidden"></div>
+  </header>
+
+  <!-- Main Content -->
+  <main class="pt-24 pb-12 px-4 sm:px-6 lg:px-8 relative z-10">
+    <div class="max-w-4xl mx-auto">
+      
+      <!-- Page Title -->
+      <div class="text-center mb-12 animate-fade-in-up">
+        <h2 class="text-4xl sm:text-5xl font-black text-gray-900 mb-4">
+          Track Your Order
+        </h2>
+        <p class="text-xl text-gray-700 font-medium">
+          Real-time updates on your delicious meal
+        </p>
+      </div>
+
+      <!-- Order Information Card -->
+      <div class="order-card rounded-3xl p-8 shadow-2xl mb-8 animate-fade-in-up" style="animation-delay: 0.2s;">
+        <div id="orderInfo">
+          <!-- Default Order Info (based on your example) -->
+          <div class="text-center mb-6">
+            <h3 class="text-3xl font-bold text-gray-900 mb-2">Order #68f4e7</h3>
+            <p class="text-lg text-gray-600 font-medium">Placed 6:58:59 PM</p>
+          </div>
+          
+          <div class="bg-gradient-to-r from-amber-50 to-orange-50 rounded-2xl p-6 mb-6">
+            <h4 class="text-xl font-bold text-gray-900 mb-4 flex items-center">
+              <span class="text-2xl mr-3">🍽️</span>
+              Order Items
+            </h4>
+            <div class="space-y-3">
+              <div class="flex justify-between items-center bg-white rounded-xl p-4 shadow-sm">
+                <div>
+                  <span class="font-semibold text-gray-900">1 x Masala Dosa</span>
+                </div>
+                <span class="font-bold text-brand-dark">₹120</span>
+              </div>
+            </div>
+            <div class="mt-4 pt-4 border-t border-gray-200">
+              <div class="flex justify-between items-center text-xl font-bold">
+                <span class="text-gray-900">Total:</span>
+                <span class="text-brand-dark">₹135</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Order Status Timeline -->
+      <div class="order-card rounded-3xl p-8 shadow-2xl animate-fade-in-up" style="animation-delay: 0.4s;">
+        <h4 class="text-2xl font-bold text-gray-900 mb-8 text-center">Order Progress</h4>
+        
+        <div id="statusTimeline" class="relative">
+          <!-- Progress Line -->
+          <div class="absolute top-8 left-0 right-0 h-1 bg-gray-200 rounded-full"></div>
+          <div class="absolute top-8 left-0 h-1 bg-gradient-to-r from-brand-yellow to-brand-dark rounded-full transition-all duration-500" style="width: 25%;"></div>
+          
+          <!-- Steps -->
+          <div class="relative flex justify-between items-center">
+            <!-- Step 1: Placed -->
+            <div class="flex flex-col items-center">
+              <div class="w-16 h-16 rounded-full step-completed flex items-center justify-center text-xl font-bold mb-3 animate-pulse-custom">
+                1
+              </div>
+              <span class="text-sm font-semibold text-gray-900">Placed</span>
+            </div>
+            
+            <!-- Step 2: Cooking -->
+            <div class="flex flex-col items-center">
+              <div class="w-16 h-16 rounded-full step-inactive flex items-center justify-center text-xl font-bold mb-3">
+                2
+              </div>
+              <span class="text-sm font-semibold text-gray-500">Cooking</span>
+            </div>
+            
+            <!-- Step 3: Ready -->
+            <div class="flex flex-col items-center">
+              <div class="w-16 h-16 rounded-full step-inactive flex items-center justify-center text-xl font-bold mb-3">
+                3
+              </div>
+              <span class="text-sm font-semibold text-gray-500">Ready</span>
+            </div>
+            
+            <!-- Step 4: Out for Delivery -->
+            <div class="flex flex-col items-center">
+              <div class="w-16 h-16 rounded-full step-inactive flex items-center justify-center text-xl font-bold mb-3">
+                4
+              </div>
+              <span class="text-sm font-semibold text-gray-500">Out for Delivery</span>
+            </div>
+            
+            <!-- Step 5: Delivered -->
+            <div class="flex flex-col items-center">
+              <div class="w-16 h-16 rounded-full step-inactive flex items-center justify-center text-xl font-bold mb-3">
+                5
+              </div>
+              <span class="text-sm font-semibold text-gray-500">Delivered</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Delivery Partner Info -->
+      <div id="deliveryPartner" class="order-card rounded-3xl p-8 shadow-2xl mt-8 hidden animate-fade-in-up" style="animation-delay: 0.6s;">
+        <h4 class="text-xl font-bold text-gray-900 mb-4 flex items-center">
+          <span class="text-2xl mr-3">🚴‍♂️</span>
+          Delivery Partner
+        </h4>
+      </div>
+
+    </div>
   </main>
-  <footer class="py-6 text-center text-sm text-gray-500">© 2025 VITato</footer>
+  <!-- Footer -->
+  <footer class="bg-white/10 backdrop-blur-sm py-8 text-center">
+    <p class="text-white/80 font-medium">© 2025 VIT-Bolt. Made with ❤️ for VIT Bhopal</p>
+  </footer>
+
   <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
   <script src="/js/transitions.js"></script>
   <script src="/js/auth.js"></script>
   <script src="/js/track.js"></script>
+
+  <script>
+    // Enhanced animations on scroll
+    document.addEventListener('DOMContentLoaded', function() {
+      const observerOptions = {
+        threshold: 0.1,
+        rootMargin: '0px 0px -50px 0px'
+      };
+
+      const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting) {
+            entry.target.style.animationPlayState = 'running';
+          }
+        });
+      }, observerOptions);
+
+      document.querySelectorAll('.animate-fade-in-up').forEach(el => {
+        el.style.animationPlayState = 'paused';
+        observer.observe(el);
+      });
+
+      // Start first animation immediately
+      setTimeout(() => {
+        document.querySelector('.animate-fade-in-up').style.animationPlayState = 'running';
+      }, 100);
+    });
+  </script>
 </body>
 </html>

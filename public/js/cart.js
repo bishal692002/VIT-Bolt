@@ -7,63 +7,229 @@
   const checkoutBtn = document.getElementById('checkoutBtn');
   const payBtn = document.getElementById('payBtn');
   const addAddrBtn = document.getElementById('addAddrBtn');
-  const addressListCart = document.getElementById('addressListCart');
+  const selectAddrBtn = document.getElementById('selectAddrBtn');
+  const changeAddressBtn = document.getElementById('changeAddressBtn');
   const noAddressMsg = document.getElementById('noAddressMsg');
+  const selectedAddressDisplay = document.getElementById('selectedAddressDisplay');
+  const selectedAddressLabel = document.getElementById('selectedAddressLabel');
+  const selectedAddressDetails = document.getElementById('selectedAddressDetails');
+  
+  // Modal elements
+  const addressModal = document.getElementById('addressModal');
+  const closeAddressModal = document.getElementById('closeAddressModal');
+  const addressSearch = document.getElementById('addressSearch');
+  const modalAddressList = document.getElementById('modalAddressList');
+  const modalNoAddresses = document.getElementById('modalNoAddresses');
+  const addNewAddressFromModal = document.getElementById('addNewAddressFromModal');
+  
   let addresses = [];
-  let selectedAddressIndex = 0;
+  let selectedAddressIndex = -1;
+  let filteredAddresses = [];
+
+  // Show any pending toast message passed via redirect
+  (function(){
+    try {
+      const msg = localStorage.getItem('vitato_toast');
+      if(msg){
+        if (window.toast && typeof window.toast.info === 'function') {
+          window.toast.info(msg);
+        } else {
+          // Fallback inline message
+          const box = document.getElementById('cartSummary');
+          if (box) {
+            const m = document.createElement('div');
+            m.className = 'mb-3 text-sm text-yellow-700';
+            m.textContent = msg;
+            box.prepend(m);
+          }
+        }
+        localStorage.removeItem('vitato_toast');
+      }
+    } catch {}
+  })();
 
   async function loadAddresses(){
     const token = localStorage.getItem('vitato_token');
     if(!token) return;
     const res = await fetch('/api/addresses', { headers:{ Authorization:'Bearer '+token }});
-    if(res.ok){ addresses = await res.json(); if(selectedAddressIndex >= addresses.length) selectedAddressIndex = 0; renderAddresses(); }
+    if(res.ok){ 
+      addresses = await res.json(); 
+      // Sort addresses - recently used first (you can implement usage tracking later)
+      if(selectedAddressIndex >= addresses.length) selectedAddressIndex = -1; 
+      updateAddressDisplay();
+    }
   }
-  function renderAddresses(){
-    if(!addressListCart) return;
-  addressListCart.innerHTML = addresses.map((a,i)=> `<label class='border rounded-md p-2 cursor-pointer flex justify-between gap-3 ${i===selectedAddressIndex? 'border-yellow-400 bg-yellow-50':'border-gray-200 bg-gray-50'}'>
-      <span class='flex-1 text-[11px] leading-relaxed'>
-        <span class='font-medium block mb-0.5'>${a.label||'Address '+(i+1)}</span>
-        <span>${a.line1}${a.line2? ', '+a.line2:''}</span>
-        ${a.landmark? `<span class='block text-gray-500'>${a.landmark}</span>`:''}
-      </span>
-      <span class='flex flex-col items-end gap-1'>
-        <input type='radio' name='addrSel' value='${i}' ${i===selectedAddressIndex?'checked':''} class='mt-1'>
-        <button data-edit='${a._id}' class='text-[10px] text-yellow-700'>Edit</button>
-        <button data-del='${a._id}' class='text-[10px] text-red-500'>Del</button>
-      </span>
-    </label>`).join('');
-    noAddressMsg.classList.toggle('hidden', addresses.length>0);
-    addressListCart.querySelectorAll('input[name="addrSel"]').forEach(r=> r.addEventListener('change', ()=>{ selectedAddressIndex = parseInt(r.value); }));
-    addressListCart.querySelectorAll('[data-edit]').forEach(btn=> btn.addEventListener('click', async ()=>{
-      const id = btn.getAttribute('data-edit'); const a = addresses.find(x=> x._id===id); if(!a) return;
-      const label = prompt('Label', a.label||'')||'';
-      const line1 = prompt('Line 1', a.line1)||a.line1; if(!line1) return;
-      const line2 = prompt('Line 2', a.line2||'')||'';
-      const landmark = prompt('Landmark', a.landmark||'')||'';
-      const token = localStorage.getItem('vitato_token');
-      await fetch('/api/addresses/'+id, { method:'PUT', headers:{ 'Content-Type':'application/json', Authorization:'Bearer '+token }, body: JSON.stringify({ label, line1, line2, landmark }) });
-      loadAddresses();
-    }));
-    addressListCart.querySelectorAll('[data-del]').forEach(btn=> btn.addEventListener('click', async ()=>{
-      if(!confirm('Delete address?')) return;
-      const id = btn.getAttribute('data-del');
-      const token = localStorage.getItem('vitato_token');
-      await fetch('/api/addresses/'+id, { method:'DELETE', headers:{ Authorization:'Bearer '+token }});
-      loadAddresses();
-    }));
-    // Disable checkout if no addresses
-    checkoutBtn.disabled = addresses.length === 0;
-    checkoutBtn.classList.toggle('opacity-50', checkoutBtn.disabled);
+
+  function updateAddressDisplay(){
+    const hasAddress = selectedAddressIndex >= 0 && addresses[selectedAddressIndex];
+    
+    selectedAddressDisplay.classList.toggle('hidden', !hasAddress);
+    noAddressMsg.classList.toggle('hidden', hasAddress);
+    
+    if(hasAddress){
+      const addr = addresses[selectedAddressIndex];
+      
+      // Helper function to safely get field value
+      const getFieldValue = (field) => {
+        return field && field !== 'undefined' && field !== 'null' && field.trim() !== '' ? field : null;
+      };
+      
+      const label = getFieldValue(addr.label) || `Address ${selectedAddressIndex + 1}`;
+      const line1 = getFieldValue(addr.line1) || 'Address not specified';
+      const line2 = getFieldValue(addr.line2);
+      const landmark = getFieldValue(addr.landmark);
+      const city = getFieldValue(addr.city);
+      const pincode = getFieldValue(addr.pincode);
+      
+      // Build city-pincode line only if at least one exists
+      let cityPincodeText = '';
+      if (city || pincode) {
+        cityPincodeText = `<br>${city || ''}${city && pincode ? ' - ' : ''}${pincode || ''}`;
+      }
+      
+      selectedAddressLabel.textContent = label;
+      selectedAddressDetails.innerHTML = `
+        ${line1}${line2 ? ', ' + line2 : ''}${cityPincodeText}
+        ${landmark ? '<br>' + landmark : ''}
+      `;
+    }
+    
+    // Disable checkout if no address selected
+    checkoutBtn.disabled = !hasAddress;
+    checkoutBtn.classList.toggle('opacity-50', !hasAddress);
   }
-  addAddrBtn?.addEventListener('click', async ()=>{
-    const label = prompt('Label (Hostel / Block)?'); if(label===null) return;
-    const line1 = prompt('Line 1 (Required)'); if(!line1) return;
-    const line2 = prompt('Line 2 (Optional)')||'';
-    const landmark = prompt('Landmark (Optional)')||'';
-    const token = localStorage.getItem('vitato_token');
-    await fetch('/api/addresses', { method:'POST', headers:{ 'Content-Type':'application/json', Authorization:'Bearer '+token }, body: JSON.stringify({ label, line1, line2, landmark }) });
-    await loadAddresses(); selectedAddressIndex = addresses.length - 1; renderAddresses();
+
+  function filterAddresses(searchTerm = ''){
+    const term = searchTerm.toLowerCase().trim();
+    if(!term){
+      filteredAddresses = [...addresses];
+    } else {
+      filteredAddresses = addresses.filter(addr => 
+        (addr.label || '').toLowerCase().includes(term) ||
+        (addr.line1 || '').toLowerCase().includes(term) ||
+        (addr.line2 || '').toLowerCase().includes(term) ||
+        (addr.landmark || '').toLowerCase().includes(term) ||
+        (addr.city || '').toLowerCase().includes(term) ||
+        (addr.pincode || '').toLowerCase().includes(term)
+      );
+    }
+    renderModalAddresses();
+  }
+
+  function renderModalAddresses(){
+    if(filteredAddresses.length === 0){
+      modalAddressList.innerHTML = '';
+      modalNoAddresses.classList.remove('hidden');
+      return;
+    }
+    
+    modalNoAddresses.classList.add('hidden');
+    modalAddressList.innerHTML = filteredAddresses.map((addr, index) => {
+      const actualIndex = addresses.findIndex(a => a._id === addr._id);
+      const isSelected = actualIndex === selectedAddressIndex;
+      
+      // Helper function to safely get field value
+      const getFieldValue = (field) => {
+        return field && field !== 'undefined' && field !== 'null' && field.trim() !== '' ? field : null;
+      };
+      
+      const label = getFieldValue(addr.label) || `Address ${actualIndex + 1}`;
+      const line1 = getFieldValue(addr.line1) || 'Address not specified';
+      const line2 = getFieldValue(addr.line2);
+      const landmark = getFieldValue(addr.landmark);
+      const city = getFieldValue(addr.city);
+      const pincode = getFieldValue(addr.pincode);
+      
+      // Build city-pincode line only if at least one exists
+      let cityPincodeText = '';
+      if (city || pincode) {
+        cityPincodeText = `${city || ''}${city && pincode ? ' - ' : ''}${pincode || ''}`;
+      }
+      
+      return `
+        <div class="address-option border rounded-lg p-4 cursor-pointer transition-all hover:border-yellow-400 hover:bg-yellow-50 ${isSelected ? 'border-yellow-400 bg-yellow-50' : 'border-gray-200'}" 
+             data-index="${actualIndex}">
+          <div class="flex items-start justify-between">
+            <div class="flex-1">
+              <div class="font-medium text-sm mb-1">${label}</div>
+              <div class="text-xs text-gray-600 leading-relaxed">
+                ${line1}${line2 ? ', ' + line2 : ''}<br>
+                ${landmark ? landmark + ', ' : ''}${cityPincodeText}
+              </div>
+            </div>
+            <div class="flex items-center gap-2 ml-3">
+              ${isSelected ? '<span class="text-xs bg-green-100 text-green-700 px-2 py-1 rounded-full">Selected</span>' : ''}
+              <button class="text-xs text-yellow-700 hover:text-yellow-800" onclick="editAddress('${addr._id}')">Edit</button>
+            </div>
+          </div>
+        </div>
+      `;
+    }).join('');
+    
+    // Add click listeners to address options
+    modalAddressList.querySelectorAll('.address-option').forEach(option => {
+      option.addEventListener('click', () => {
+        selectedAddressIndex = parseInt(option.dataset.index);
+        updateAddressDisplay();
+        closeModal();
+      });
+    });
+  }
+
+  function openModal(){
+    filteredAddresses = [...addresses];
+    renderModalAddresses();
+    addressSearch.value = '';
+    addressModal.classList.remove('hidden');
+    document.body.style.overflow = 'hidden';
+  }
+
+  function closeModal(){
+    addressModal.classList.add('hidden');
+    document.body.style.overflow = '';
+  }
+
+  // Event listeners
+  selectAddrBtn?.addEventListener('click', openModal);
+  changeAddressBtn?.addEventListener('click', openModal);
+  closeAddressModal?.addEventListener('click', closeModal);
+  
+  // Close modal when clicking outside
+  addressModal?.addEventListener('click', (e) => {
+    if(e.target === addressModal) closeModal();
   });
+
+  // Search functionality
+  addressSearch?.addEventListener('input', (e) => {
+    filterAddresses(e.target.value);
+  });
+
+  // Add address buttons
+  addAddrBtn?.addEventListener('click', () => {
+    try {
+      localStorage.setItem('vitato_return_to', location.pathname + location.search + location.hash);
+      localStorage.setItem('vitato_notice', 'addAddress');
+    } catch {}
+    window.location.href = '/addresses.html';
+  });
+
+  addNewAddressFromModal?.addEventListener('click', () => {
+    try {
+      localStorage.setItem('vitato_return_to', location.pathname + location.search + location.hash);
+      localStorage.setItem('vitato_notice', 'addAddress');
+    } catch {}
+    window.location.href = '/addresses.html';
+  });
+
+  // Edit address function (global)
+  window.editAddress = function(addressId){
+    try {
+      localStorage.setItem('vitato_return_to', location.pathname + location.search + location.hash);
+      localStorage.setItem('vitato_notice', 'editAddress');
+      localStorage.setItem('vitato_edit_address', addressId);
+    } catch {}
+    window.location.href = '/addresses.html';
+  };
 
   function getCart(){ return JSON.parse(localStorage.getItem('vitato_cart')||'[]'); }
   function setCart(c){ localStorage.setItem('vitato_cart', JSON.stringify(c)); }
@@ -134,7 +300,18 @@
     if(!cart.length) return;
     const token = localStorage.getItem('vitato_token');
     if(!token){ alert('Login required'); return; }
-    if(!addresses.length){ if(!confirm('No delivery address saved. Add one?')) return; }
+    if(selectedAddressIndex < 0 || !addresses.length){
+      try {
+        localStorage.setItem('vitato_return_to', location.pathname + location.search + location.hash);
+        localStorage.setItem('vitato_notice', 'addAddress');
+      } catch {}
+      // Navigate to dedicated addresses page with a notice to add address
+      if (window.toast && typeof window.toast.info === 'function') {
+        window.toast.info('Please select a delivery address before proceeding');
+      }
+      window.location.href = '/addresses.html';
+      return;
+    }
     checkoutBtn.disabled = true; checkoutBtn.textContent='Processing...';
     try {
   const address = addresses[selectedAddressIndex] || null;
@@ -148,7 +325,7 @@
         key,
         amount: data.amount,
         currency: data.currency,
-        name: 'VITato',
+        name: 'VIT-Bolt',
         description: 'Order Payment',
         order_id: data.razorpayOrderId,
         handler: async function (response){

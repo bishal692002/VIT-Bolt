@@ -1,65 +1,144 @@
 <!DOCTYPE html>
-<html lang="en" class="h-full">
+<html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Apply as Vendor - VITato</title>
+  <title>Apply as Vendor - VIT-Bolt</title>
+
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="/css/tailwind.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            'poppins': ['Poppins', 'sans-serif']
+          },
+          colors: {
+            'brand-yellow': '#F59E0B',
+            'brand-dark': '#D97706',
+            'brand-light': '#FCD34D'
+          }
+        }
+      }
+    }
+  </script>
+
   <script src="/js/toast.js"></script>
+
   <style>
-    body { font-family: 'Inter', sans-serif; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
-    .input-field { transition: all 0.3s ease; }
-    .input-field:focus { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(255, 213, 79, 0.2); }
-    .btn-primary { background: #FFD54F; color: #333; font-weight: 600; transition: all 0.3s ease; }
-    .btn-primary:hover { background: #f7c63a; transform: translateY(-2px); box-shadow: 0 8px 16px rgba(255, 213, 79, 0.3); }
-    .btn-secondary { background: white; border: 2px solid #e5e7eb; color: #374151; font-weight: 500; transition: all 0.3s ease; }
-    .btn-secondary:hover { border-color: #FFD54F; background: #FFFBF0; }
+    body {
+      font-family: 'Poppins', sans-serif;
+      background: linear-gradient(135deg, #FFFBEB 0%, #FEF3C7 50%, #FDE68A 100%);
+      min-height: 100vh;
+    }
+
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .animate-fade-in-up {
+      animation: fadeInUp 0.8s ease-out forwards;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, #F59E0B 0%, #D97706 100%);
+      box-shadow: 0 10px 30px rgba(245, 158, 11, 0.4);
+      transition: all 0.3s ease;
+    }
+
+    .btn-primary:hover {
+      box-shadow: 0 15px 40px rgba(245, 158, 11, 0.5);
+      transform: translateY(-3px);
+    }
+
+    .btn-secondary {
+      border: 2px solid #F59E0B;
+      color: #D97706;
+      transition: all 0.3s ease;
+    }
+
+    .btn-secondary:hover {
+      background: #FEF3C7;
+      transform: translateY(-2px);
+    }
+
+    input:focus, textarea:focus, select:focus {
+      border-color: #F59E0B;
+      box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.1);
+    }
+
+    .status-pending {
+      background: linear-gradient(135deg, #FBBF24 0%, #F59E0B 100%);
+    }
+
+    .status-approved {
+      background: linear-gradient(135deg, #10B981 0%, #059669 100%);
+    }
+
+    .status-rejected {
+      background: linear-gradient(135deg, #EF4444 0%, #DC2626 100%);
+    }
   </style>
 </head>
-<body class="flex items-center justify-center min-h-full p-4">
-  <div class="w-full max-w-2xl bg-white rounded-2xl shadow-2xl p-8">
+<body class="flex items-center justify-center min-h-screen p-4">
+
+  <div class="w-full max-w-2xl bg-white rounded-3xl shadow-2xl p-8 sm:p-10 animate-fade-in-up">
+
+    <!-- Header -->
     <div class="text-center mb-8">
-      <img src="/images/VITato.png" alt="VITato" class="h-16 mx-auto mb-4" />
-      <h1 class="text-3xl font-bold text-gray-900 mb-2">Apply as a Vendor</h1>
-      <p class="text-gray-600">Join VITato and start serving delicious food to VIT Bhopal students</p>
+      <div class="w-20 h-20 bg-gradient-to-br from-amber-400 to-orange-500 rounded-2xl flex items-center justify-center mx-auto mb-5 shadow-lg">
+        <svg class="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-4m-5 0H9m0 0H5m0 0v-4a2 2 0 012-2h2m4 0h2a2 2 0 012 2v4"></path>
+        </svg>
+      </div>
+      <h1 class="text-3xl sm:text-4xl font-black text-gray-900 mb-3">Apply as a Vendor</h1>
+      <p class="text-gray-600 text-base">Join VIT-Bolt and start serving delicious food to VIT Bhopal students</p>
     </div>
 
     <div id="applicationForm" class="space-y-6">
-      <form id="vendorAppForm" class="space-y-4">
+      <form id="vendorAppForm" class="space-y-5">
         <div class="grid md:grid-cols-2 gap-4">
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Business Name *</label>
-            <input type="text" name="businessName" required class="input-field w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent" placeholder="e.g., Tasty Bites Cafe" />
+            <label class="block text-sm font-semibold text-gray-700 mb-2">Business Name *</label>
+            <input type="text" name="businessName" required class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none transition-all" placeholder="e.g., Tasty Bites Cafe" />
           </div>
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Owner Name *</label>
-            <input type="text" name="ownerName" required class="input-field w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent" placeholder="Your full name" />
+            <label class="block text-sm font-semibold text-gray-700 mb-2">Owner Name *</label>
+            <input type="text" name="ownerName" required class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none transition-all" placeholder="Your full name" />
           </div>
         </div>
 
         <div class="grid md:grid-cols-2 gap-4">
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Contact Number *</label>
-            <input type="tel" name="contactNumber" required pattern="[0-9]{10}" class="input-field w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent" placeholder="10-digit mobile number" />
+            <label class="block text-sm font-semibold text-gray-700 mb-2">Contact Number *</label>
+            <input type="tel" name="contactNumber" required pattern="[0-9]{10}" class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none transition-all" placeholder="10-digit mobile number" />
           </div>
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Email Address *</label>
-            <input type="email" name="email" required class="input-field w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent" placeholder="your.email@example.com" />
+            <label class="block text-sm font-semibold text-gray-700 mb-2">Email Address *</label>
+            <input type="email" name="email" required class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none transition-all" placeholder="your.email@example.com" />
           </div>
         </div>
 
         <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">Business Address *</label>
-          <textarea name="address" required rows="3" class="input-field w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent" placeholder="Full address including building and landmark"></textarea>
+          <label class="block text-sm font-semibold text-gray-700 mb-2">Business Address *</label>
+          <textarea name="address" required rows="3" class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none transition-all" placeholder="Full address including building and landmark"></textarea>
         </div>
 
         <div class="grid md:grid-cols-2 gap-4">
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Type of Cuisine *</label>
-            <select name="cuisineType" required class="input-field w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent">
+            <label class="block text-sm font-semibold text-gray-700 mb-2">Type of Cuisine *</label>
+            <select name="cuisineType" required class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none transition-all">
               <option value="">Select cuisine type</option>
               <option value="North Indian">North Indian</option>
               <option value="South Indian">South Indian</option>
@@ -73,52 +152,67 @@
             </select>
           </div>
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">License/ID Number (Optional)</label>
-            <input type="text" name="licenseId" class="input-field w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent" placeholder="FSSAI or GST number" />
+            <label class="block text-sm font-semibold text-gray-700 mb-2">License/ID Number (Optional)</label>
+            <input type="text" name="licenseId" class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none transition-all" placeholder="FSSAI or GST number" />
           </div>
         </div>
 
-        <div class="flex justify-between items-center pt-4">
-          <button type="button" onclick="goBackHome()" class="btn-secondary px-6 py-3 rounded-lg">
+        <div class="flex gap-3 pt-4">
+          <button type="button" onclick="goBackHome()" class="flex-1 btn-secondary py-4 px-4 rounded-xl font-semibold">
             ← Back to Home
           </button>
-          <button type="submit" id="submitBtn" class="btn-primary px-8 py-3 rounded-lg">
+          <button type="submit" id="submitBtn" class="flex-1 btn-primary py-4 px-4 rounded-xl font-bold text-white">
             Submit Application
           </button>
         </div>
       </form>
+
+      <div class="text-center">
+        <a href="/check-status.html" class="text-sm text-gray-600 hover:text-brand-yellow transition-colors font-medium">
+          Already applied? Check Application Status →
+        </a>
+      </div>
     </div>
 
     <!-- Success Status Screen -->
     <div id="statusScreen" class="hidden space-y-6">
       <div class="text-center">
-        <div class="mb-4">
-          <svg class="w-20 h-20 mx-auto text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <div class="w-20 h-20 bg-gradient-to-br from-green-400 to-green-500 rounded-2xl flex items-center justify-center mx-auto mb-5 shadow-lg">
+          <svg class="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
           </svg>
         </div>
-        <h2 class="text-2xl font-bold text-gray-900 mb-2">Application Submitted!</h2>
-        <p class="text-gray-600 mb-6">Your vendor application has been received successfully.</p>
+        <h2 class="text-3xl font-black text-gray-900 mb-3">Application Submitted!</h2>
+        <p class="text-gray-600 text-base mb-6">Your vendor application has been received successfully.</p>
         
-        <div class="bg-purple-50 border-2 border-purple-200 rounded-lg p-6 mb-6">
-          <p class="text-sm text-gray-600 mb-2">Your Application Number</p>
-          <p class="text-3xl font-bold text-purple-700" id="applicationNumber">-</p>
-          <p class="text-xs text-gray-500 mt-2">Please save this number for tracking</p>
+        <div class="bg-gradient-to-br from-brand-yellow to-brand-dark text-white rounded-2xl p-6 mb-6 shadow-lg">
+          <p class="text-sm mb-2 opacity-90">Your Application Number</p>
+          <p class="text-3xl font-black" id="applicationNumber">-</p>
+          <p class="text-xs mt-2 opacity-80">Please save this number for tracking</p>
         </div>
 
-        <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-6">
-          <p class="text-sm text-gray-700">
-            <strong>What's Next?</strong><br>
-            Our team will review your application within 2-3 business days. 
-            You'll receive your login credentials via email once approved.
-          </p>
+        <div class="bg-amber-50 border-2 border-amber-200 rounded-xl p-5 mb-6">
+          <div class="flex items-start space-x-3">
+            <div class="w-6 h-6 bg-amber-400 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+              <svg class="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"></path>
+              </svg>
+            </div>
+            <div class="text-left">
+              <p class="text-sm font-bold text-amber-800 mb-1">What's Next?</p>
+              <p class="text-sm text-amber-700">
+                Our team will review your application within 2-3 business days. 
+                You'll receive your login credentials via email once approved.
+              </p>
+            </div>
+          </div>
         </div>
 
         <div class="space-y-3">
-          <button onclick="checkStatus()" class="w-full btn-primary px-6 py-3 rounded-lg">
+          <button onclick="checkStatus()" class="w-full btn-primary px-6 py-4 rounded-xl font-bold text-white">
             Check Application Status
           </button>
-          <button onclick="goBackHome()" class="w-full btn-secondary px-6 py-3 rounded-lg">
+          <button onclick="goBackHome()" class="w-full btn-secondary px-6 py-4 rounded-xl font-semibold">
             Back to Home
           </button>
         </div>
@@ -127,21 +221,34 @@
 
     <!-- Status Check Screen -->
     <div id="statusCheckScreen" class="hidden space-y-6">
-      <button onclick="hideStatus()" class="text-purple-600 hover:text-purple-700 mb-4">
+      <button onclick="hideStatus()" class="text-brand-yellow hover:text-brand-dark font-medium transition-colors mb-4">
         ← Back
       </button>
       
       <div class="text-center mb-6">
-        <h2 class="text-2xl font-bold text-gray-900 mb-2">Check Application Status</h2>
-        <p class="text-gray-600">Enter your application number to check status</p>
+        <div class="w-20 h-20 bg-gradient-to-br from-amber-400 to-orange-500 rounded-2xl flex items-center justify-center mx-auto mb-5 shadow-lg">
+          <svg class="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"></path>
+          </svg>
+        </div>
+        <h2 class="text-3xl font-black text-gray-900 mb-3">Check Application Status</h2>
+        <p class="text-gray-600 text-base">Enter your application number to check status</p>
       </div>
 
-      <form id="statusCheckForm" class="space-y-4">
+      <form id="statusCheckForm" class="space-y-5">
         <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">Application Number</label>
-          <input type="text" id="appNumberInput" required class="input-field w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent" placeholder="VITVENDOR..." />
+          <label class="block text-sm font-semibold text-gray-700 mb-2">Application Number</label>
+          <input 
+            type="text" 
+            id="appNumberInput" 
+            required 
+            pattern="VITVENDOR2025[0-9]{4}"
+            class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none transition-all text-center text-lg font-mono tracking-wider" 
+            placeholder="e.g., VITVENDOR20250001" 
+          />
+          <p class="mt-2 text-xs text-gray-500 text-center">Format: VITVENDOR2025XXXX</p>
         </div>
-        <button type="submit" class="w-full btn-primary px-6 py-3 rounded-lg">
+        <button type="submit" class="w-full btn-primary px-6 py-4 rounded-xl font-bold text-white">
           Check Status
         </button>
       </form>
@@ -151,7 +258,35 @@
   </div>
 
   <script>
-    window.toast = new Toast();
+    // Simple toast notification
+    function showToast(message, type = 'info') {
+      const toast = document.createElement('div');
+      toast.className = `fixed top-4 right-4 px-6 py-3 rounded-lg text-white font-semibold shadow-lg z-50 animate-fade-in-up`;
+
+      if (type === 'success') toast.style.background = 'linear-gradient(135deg, #10B981, #059669)';
+      else if (type === 'error') toast.style.background = 'linear-gradient(135deg, #EF4444, #DC2626)';
+      else if (type === 'warning') toast.style.background = 'linear-gradient(135deg, #FBBF24, #F59E0B)';
+      else toast.style.background = 'linear-gradient(135deg, #3B82F6, #2563EB)';
+
+      toast.textContent = message;
+      document.body.appendChild(toast);
+
+      setTimeout(() => {
+        toast.style.opacity = '0';
+        toast.style.transform = 'translateY(-20px)';
+        setTimeout(() => toast.remove(), 300);
+      }, 3000);
+    }
+
+    // Initialize toast if not already available
+    if (typeof window.toast === 'undefined') {
+      window.toast = {
+        success: (msg) => showToast(msg, 'success'),
+        error: (msg) => showToast(msg, 'error'),
+        warning: (msg) => showToast(msg, 'warning'),
+        info: (msg) => showToast(msg, 'info')
+      };
+    }
 
     document.addEventListener('DOMContentLoaded', function() {
       const appForm = document.getElementById('vendorAppForm');
@@ -180,15 +315,15 @@
             document.getElementById('applicationNumber').textContent = result.applicationNumber;
             document.getElementById('applicationForm').classList.add('hidden');
             document.getElementById('statusScreen').classList.remove('hidden');
-            toast.success('Application submitted successfully!');
+            showToast('Application submitted successfully!', 'success');
           } else {
-            toast.error(result.error || 'Failed to submit application');
+            showToast(result.error || 'Failed to submit application', 'error');
             submitBtn.disabled = false;
             submitBtn.textContent = 'Submit Application';
           }
         } catch (error) {
           console.error('Submission error:', error);
-          toast.error('Network error. Please try again.');
+          showToast('Network error. Please try again.', 'error');
           submitBtn.disabled = false;
           submitBtn.textContent = 'Submit Application';
         }
@@ -197,7 +332,14 @@
       statusForm.addEventListener('submit', async function(e) {
         e.preventDefault();
         
-        const appNumber = document.getElementById('appNumberInput').value.trim();
+        const appNumber = document.getElementById('appNumberInput').value.trim().toUpperCase();
+        
+        if (!appNumber) {
+          showToast('Please enter an application number', 'warning');
+          return;
+        }
+
+        showToast('Checking application status...', 'info');
         
         try {
           const response = await fetch(`/api/vendor-applications/status/${appNumber}`);
@@ -206,95 +348,141 @@
           const statusResult = document.getElementById('statusResult');
           
           if (response.ok) {
-            let statusColor = 'gray';
-            let statusText = result.status;
-            
-            if (result.status === 'approved') {
-              statusColor = 'green';
-              statusText = '✅ Approved';
-            } else if (result.status === 'rejected') {
-              statusColor = 'red';
-              statusText = '❌ Rejected';
-            } else if (result.status === 'pending') {
-              statusColor = 'yellow';
-              statusText = '⏳ Pending Review';
-            }
-
-            let html = `
-              <div class="bg-white border-2 border-${statusColor}-200 rounded-lg p-6">
-                <div class="text-center mb-4">
-                  <p class="text-lg font-semibold text-${statusColor}-700">${statusText}</p>
-                  <p class="text-sm text-gray-600 mt-1">${result.businessName}</p>
-                </div>
-                
-                <div class="space-y-2 text-sm">
-                  <div class="flex justify-between">
-                    <span class="text-gray-600">Application #:</span>
-                    <span class="font-medium">${result.applicationNumber}</span>
-                  </div>
-                  <div class="flex justify-between">
-                    <span class="text-gray-600">Submitted:</span>
-                    <span class="font-medium">${new Date(result.submittedAt).toLocaleDateString()}</span>
-                  </div>
-                  ${result.processedAt ? `
-                  <div class="flex justify-between">
-                    <span class="text-gray-600">Processed:</span>
-                    <span class="font-medium">${new Date(result.processedAt).toLocaleDateString()}</span>
-                  </div>
-                  ` : ''}
-                </div>
-
-                ${result.message ? `
-                <div class="mt-4 p-3 bg-${statusColor}-50 rounded-lg">
-                  <p class="text-sm text-${statusColor}-800">${result.message}</p>
-                </div>
-                ` : ''}
-
-                ${result.rejectionReason ? `
-                <div class="mt-4 p-3 bg-red-50 border border-red-200 rounded-lg">
-                  <p class="text-sm font-medium text-red-800 mb-1">Reason:</p>
-                  <p class="text-sm text-red-700">${result.rejectionReason}</p>
-                </div>
-                ` : ''}
-
-                ${result.credentials ? `
-                <div class="mt-4 p-4 bg-green-50 border-2 border-green-300 rounded-lg">
-                  <p class="text-sm font-bold text-green-800 mb-3">🎉 Your Login Credentials:</p>
-                  <div class="space-y-2 text-sm">
-                    <div>
-                      <span class="text-gray-600">Email:</span>
-                      <span class="font-mono font-medium ml-2">${result.credentials.email}</span>
-                    </div>
-                    <div>
-                      <span class="text-gray-600">Password:</span>
-                      <span class="font-mono font-medium ml-2">${result.credentials.password}</span>
-                    </div>
-                  </div>
-                  <div class="mt-3">
-                    <a href="/vendor.html" class="inline-block w-full text-center btn-primary px-4 py-2 rounded-lg">
-                      Login to Dashboard →
-                    </a>
-                  </div>
-                </div>
-                ` : ''}
-              </div>
-            `;
-
-            statusResult.innerHTML = html;
+            displayStatusResult(result);
             statusResult.classList.remove('hidden');
           } else {
             statusResult.innerHTML = `
-              <div class="bg-red-50 border border-red-200 rounded-lg p-4 text-center">
-                <p class="text-red-700">${result.error || 'Application not found'}</p>
+              <div class="bg-red-50 border-2 border-red-200 rounded-xl p-6 text-center">
+                <div class="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <svg class="w-8 h-8 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                  </svg>
+                </div>
+                <p class="text-red-700 font-semibold">${result.error || 'Application not found'}</p>
+                <p class="text-red-600 text-sm mt-2">Please check your application number and try again.</p>
               </div>
             `;
             statusResult.classList.remove('hidden');
+            showToast('Application not found', 'error');
           }
         } catch (error) {
           console.error('Status check error:', error);
-          toast.error('Failed to check status. Please try again.');
+          showToast('Failed to check status. Please try again.', 'error');
         }
       });
+
+      function displayStatusResult(data) {
+        const statusResult = document.getElementById('statusResult');
+        
+        let statusClass = 'status-pending';
+        let statusIcon = '⏳';
+        let statusText = 'Pending Review';
+        
+        if (data.status === 'approved') {
+          statusClass = 'status-approved';
+          statusIcon = '✅';
+          statusText = 'Approved';
+          showToast('Application approved!', 'success');
+        } else if (data.status === 'rejected') {
+          statusClass = 'status-rejected';
+          statusIcon = '❌';
+          statusText = 'Rejected';
+          showToast('Application was rejected', 'warning');
+        } else {
+          showToast('Application is pending review', 'info');
+        }
+
+        let html = `
+          <div class="${statusClass} rounded-2xl p-6 text-white shadow-lg">
+            <div class="flex items-center justify-between mb-4">
+              <h3 class="text-lg font-bold">Application Status</h3>
+              <span class="px-4 py-1.5 rounded-full text-sm font-bold bg-white/20 backdrop-blur-sm">${statusIcon} ${statusText}</span>
+            </div>
+
+            <div class="space-y-3 text-white/95">
+              <div class="flex justify-between text-sm">
+                <span class="font-medium">Application Number:</span>
+                <span class="font-mono font-bold">${data.applicationNumber}</span>
+              </div>
+              <div class="flex justify-between text-sm">
+                <span class="font-medium">Business Name:</span>
+                <span class="font-bold">${data.businessName}</span>
+              </div>
+              <div class="flex justify-between text-sm">
+                <span class="font-medium">Submitted On:</span>
+                <span class="font-bold">${new Date(data.submittedAt).toLocaleDateString('en-IN', {
+                  day: 'numeric',
+                  month: 'short',
+                  year: 'numeric'
+                })}</span>
+              </div>`;
+
+        if (data.processedAt) {
+          const label = data.status === 'approved' ? 'Approved On:' : 'Rejected On:';
+          html += `
+              <div class="flex justify-between text-sm">
+                <span class="font-medium">${label}</span>
+                <span class="font-bold">${new Date(data.processedAt).toLocaleDateString('en-IN', {
+                  day: 'numeric',
+                  month: 'short',
+                  year: 'numeric'
+                })}</span>
+              </div>`;
+        }
+
+        html += `
+            </div>
+
+            <div class="mt-5 pt-5 border-t border-white/20">`;
+
+        // Status message
+        let message = '';
+        if (data.status === 'pending') {
+          message = '⏳ Your application is under review. We will notify you once it has been processed.';
+        } else if (data.status === 'approved') {
+          message = '🎉 Congratulations! Your application has been approved. You can now login as a vendor using the credentials below.';
+        } else if (data.status === 'rejected') {
+          message = data.rejectionReason ? `❌ Reason: ${data.rejectionReason}` : '❌ Your application has been rejected. Please contact admin for more details.';
+        }
+        html += `<p class="text-sm text-white/95 leading-relaxed">${message}</p>`;
+
+        // Show credentials if approved
+        if (data.status === 'approved' && data.credentials) {
+          html += `
+            <div class="mt-5 pt-5 border-t border-white/20 space-y-3">
+              <p class="text-sm font-bold mb-2">Your Vendor Credentials:</p>
+              <div class="bg-white/10 rounded-xl p-4 space-y-2 text-sm">
+                <div class="flex justify-between">
+                  <span class="font-medium">Vendor ID:</span>
+                  <span class="font-mono font-bold">${data.credentials.vendorId || 'N/A'}</span>
+                </div>
+                <div class="flex justify-between">
+                  <span class="font-medium">Email:</span>
+                  <span class="font-bold">${data.credentials.email || 'N/A'}</span>
+                </div>
+                <div class="flex justify-between">
+                  <span class="font-medium">Password:</span>
+                  <span class="font-mono font-bold">${data.credentials.password || 'N/A'}</span>
+                </div>
+              </div>
+              <p class="text-xs text-white/80 mt-3 bg-white/10 p-3 rounded-lg">
+                ⚠️ Please save these credentials securely. You'll need them to login to your vendor dashboard.
+              </p>
+              <div class="mt-4">
+                <a href="/vendor.html" class="inline-block w-full text-center bg-white/20 hover:bg-white/30 px-4 py-3 rounded-xl font-bold transition-all">
+                  Login to Dashboard →
+                </a>
+              </div>
+            </div>`;
+        }
+
+        html += `
+            </div>
+          </div>
+        `;
+
+        statusResult.innerHTML = html;
+      }
     });
 
     window.goBackHome = function() {

@@ -33,12 +33,25 @@ async function fetchAndSaveImage(url){
 }
 
 router.get('/menu', async (req, res) => {
-  const { q, category } = req.query;
-  const filter = {};
-  if (q) filter.name = { $regex: q, $options: 'i' };
-  if (category) filter.category = category;
-  const items = await FoodItem.find(filter).populate('vendor');
-  res.json(items);
+  try {
+    const { q, category } = req.query;
+    const filter = {};
+    if (q) filter.name = { $regex: q, $options: 'i' };
+    if (category) filter.category = category;
+    
+    const items = await FoodItem.find(filter).populate('vendor');
+    
+    // Add vendor online status to each item
+    const itemsWithStatus = items.map(item => ({
+      ...item.toObject(),
+      vendorOnline: item.vendor ? item.vendor.isOnline !== false : true // Default to true if not set
+    }));
+    
+    res.json(itemsWithStatus);
+  } catch (error) {
+    console.error('Error fetching menu:', error);
+    res.status(500).json({ error: 'Failed to fetch menu' });
+  }
 });
 
 // Direct order creation disabled in prepaid flow; use /api/payments/create-order
@@ -177,6 +190,7 @@ router.get('/vendor/orders', ensureAuth, requireRole('vendor'), ensureVendorCont
   const cutoff = new Date(Date.now() - 3 * 60 * 1000);
   const orders = await Order.find({
       'items.food': { $in: vendorFoodIds },
+      status: { $ne: 'cancelled' },
       $or: [
         { 'payment.status': { $ne: 'failed' } },
         { $and: [ { 'payment.status': 'failed' }, { updatedAt: { $gte: cutoff } } ] }
@@ -230,7 +244,14 @@ router.get('/vendor/me', ensureAuth, requireRole('vendor'), ensureVendorContext,
 
 // Order history for student
 router.get('/orders', ensureAuth, async (req, res) => {
-  const orders = await Order.find({ user: req.user.id }).sort({ createdAt: -1 }).limit(25);
+  const orders = await Order.find({ user: req.user.id })
+    .sort({ createdAt: -1 })
+    .limit(25)
+    .populate({
+      path: 'items.food',
+      select: 'name price image vendor',
+      populate: { path: 'vendor', select: 'name address image' }
+    });
   res.json(orders);
 });
 

@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+  <meta http-equiv="Pragma" content="no-cache" />
+  <meta http-equiv="Expires" content="0" />
+  <title>Delivery Addresses - VIT-Bolt</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            'poppins': ['Poppins', 'sans-serif']
+          },
+          colors: {
+            'brand-yellow': '#F59E0B',
+            'brand-dark': '#D97706',
+            'brand-light': '#FCD34D'
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Poppins', sans-serif;
+      background: linear-gradient(135deg, #FFFBEB 0%, #FEF3C7 50%, #FDE68A 100%);
+      min-height: 100vh;
+    }
+
+    /* Smooth Animations */
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .animate-fade-in-up {
+      animation: fadeInUp 0.6s ease-out forwards;
+      opacity: 0;
+    }
+
+    /* Card Hover Effects */
+    .address-card {
+      transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+      background: white;
+      border: 2px solid transparent;
+    }
+
+    .address-card:hover {
+      transform: translateY(-8px) scale(1.02);
+      box-shadow: 0 25px 50px -12px rgba(245, 158, 11, 0.25);
+      border-color: rgba(245, 158, 11, 0.3);
+    }
+
+    /* Button Styles */
+    .btn-primary {
+      background: linear-gradient(135deg, #F59E0B 0%, #D97706 100%);
+      box-shadow: 0 10px 30px rgba(245, 158, 11, 0.4);
+      transition: all 0.3s ease;
+    }
+
+    .btn-primary:hover {
+      box-shadow: 0 15px 40px rgba(245, 158, 11, 0.5);
+      transform: translateY(-3px);
+    }
+
+    .btn-secondary {
+      border: 2px solid #F59E0B;
+      color: #D97706;
+      transition: all 0.3s ease;
+    }
+
+    .btn-secondary:hover {
+      background: #FEF3C7;
+      transform: translateY(-2px);
+    }
+
+    /* Modal Background */
+    .modal-bg {
+      background: rgba(0, 0, 0, 0.5);
+      backdrop-filter: blur(4px);
+    }
+
+    /* Text Clamping for Consistent Card Heights */
+    .line-clamp-1 {
+      display: -webkit-box;
+      -webkit-line-clamp: 1;
+      line-clamp: 1;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+    .line-clamp-2 {
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+  </style>
+</head>
+
+<body class="min-h-full">
+  <!-- Header -->
+  <header class="fixed top-0 left-0 right-0 bg-white/95 backdrop-blur-lg shadow-sm z-50">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex items-center justify-between h-20">
+
+        <!-- Logo -->
+        <div class="flex items-center space-x-3">
+          <div class="text-4xl">📍</div>
+          <div>
+            <h1 class="text-2xl font-bold text-gray-900">VIT-Bolt</h1>
+            <p class="text-xs text-gray-600 -mt-1">Delivery Addresses</p>
+          </div>
+        </div>
+
+        <!-- Navigation -->
+        <nav class="hidden md:flex items-center space-x-8">
+          <a href="/student.html" class="text-sm font-semibold text-gray-700 hover:text-brand-yellow transition-colors">Dashboard</a>
+          <a href="/menu.html" class="text-sm font-semibold text-gray-700 hover:text-brand-yellow transition-colors">Menu</a>
+          <a href="/cart.html" class="text-sm font-semibold text-gray-700 hover:text-brand-yellow transition-colors">Cart</a>
+        </nav>
+
+        <!-- Right Buttons -->
+        <div class="flex items-center space-x-3">
+          <button id="logoutBtn" class="px-4 py-2 text-sm font-medium text-gray-700 hover:text-brand-yellow transition-colors">
+            Logout
+          </button>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <main class="pt-24 pb-12 px-4 sm:px-6 lg:px-8">
+    <div class="max-w-4xl mx-auto">
+      
+      <!-- Page Title -->
+      <div class="text-center mb-12 animate-fade-in-up">
+        <h2 class="text-4xl sm:text-5xl font-black text-gray-900 mb-4">
+          Delivery Addresses
+        </h2>
+        <p class="text-xl text-gray-700 font-medium">
+          Manage your delivery locations for quick checkout
+        </p>
+      </div>
+
+      <!-- Add Address Button -->
+      <div class="mb-8 animate-fade-in-up" style="animation-delay: 0.2s;">
+        <button id="addAddressBtn" class="btn-primary px-8 py-4 rounded-xl text-white font-bold text-lg flex items-center space-x-3 mx-auto">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
+          </svg>
+          <span>Add New Address</span>
+        </button>
+      </div>
+
+      <!-- Addresses List -->
+      <div id="addressList" class="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 animate-fade-in-up" style="animation-delay: 0.4s;">
+        <!-- Address cards will be loaded here -->
+      </div>
+
+      <!-- Empty State -->
+      <div id="addressEmpty" class="hidden text-center py-16 animate-fade-in-up" style="animation-delay: 0.6s;">
+        <div class="text-8xl mb-6">📍</div>
+        <h3 class="text-2xl font-bold text-gray-900 mb-4">No Addresses Yet</h3>
+        <p class="text-gray-600 mb-8">Add your first delivery address to get started with ordering!</p>
+        <button class="btn-primary px-8 py-4 rounded-xl text-white font-bold" onclick="document.getElementById('addAddressBtn').click()">
+          Add Your First Address
+        </button>
+      </div>
+    </div>
+  </main>
+
+  <!-- Footer -->
+  <footer class="bg-white/80 backdrop-blur-sm py-8 text-center border-t border-amber-200">
+    <p class="text-gray-700 font-medium">© 2025 VIT-Bolt. Made with ❤️ for VIT Bhopal</p>
+  </footer>
+
+  <!-- Address Modal -->
+  <div id="addressModal" class="fixed inset-0 z-50 hidden items-center justify-center modal-bg">
+    <div class="bg-white rounded-3xl shadow-2xl max-w-md w-full mx-4 p-8 animate-fade-in-up">
+      <div class="flex items-center justify-between mb-6">
+        <h3 id="addressModalTitle" class="text-2xl font-bold text-gray-900">Add Address</h3>
+        <button id="addressModalClose" class="w-10 h-10 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center transition-colors">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+          </svg>
+        </button>
+      </div>
+
+      <form id="addressForm" class="space-y-4">
+        <input type="hidden" name="id" />
+        
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-2">Address Label</label>
+          <input name="label" type="text" placeholder="Home, Work, Hostel..." 
+                 class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-brand-yellow focus:outline-none transition-all" />
+        </div>
+
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-2">Address Line 1 *</label>
+          <input name="line1" type="text" placeholder="Building, Room number" required
+                 class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-brand-yellow focus:outline-none transition-all" />
+        </div>
+
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-2">Address Line 2</label>
+          <input name="line2" type="text" placeholder="Area, Street"
+                 class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-brand-yellow focus:outline-none transition-all" />
+        </div>
+
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-2">Landmark</label>
+          <input name="landmark" type="text" placeholder="Near library, cafeteria..."
+                 class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-brand-yellow focus:outline-none transition-all" />
+        </div>
+
+        <div id="addressFormMsg" class="text-red-500 text-sm"></div>
+
+        <div class="flex space-x-3 pt-4">
+          <button type="button" id="addressCancel" class="flex-1 btn-secondary px-6 py-3 rounded-xl font-semibold">
+            Cancel
+          </button>
+          <button type="submit" class="flex-1 btn-primary px-6 py-3 rounded-xl text-white font-semibold">
+            Save Address
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script src="/js/auth.js"></script>
+  <script src="/js/addresses.js"></script>
+
+  <script>
+    // Enhanced animations on scroll
+    document.addEventListener('DOMContentLoaded', function() {
+      const observerOptions = {
+        threshold: 0.1,
+        rootMargin: '0px 0px -50px 0px'
+      };
+
+      const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting) {
+            entry.target.style.animationPlayState = 'running';
+          }
+        });
+      }, observerOptions);
+
+      document.querySelectorAll('.animate-fade-in-up').forEach(el => {
+        el.style.animationPlayState = 'paused';
+        observer.observe(el);
+      });
+
+      // Start first animation immediately
+      setTimeout(() => {
+        const firstEl = document.querySelector('.animate-fade-in-up');
+        if (firstEl) firstEl.style.animationPlayState = 'running';
+      }, 100);
+    });
+  </script>
+</body>
+</html>

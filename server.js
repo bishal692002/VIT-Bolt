@@ -16,6 +16,7 @@ import orderSocket from './src/sockets/orderSocket.js';
 import { createServer } from 'http';
 import { geoFenceMiddleware } from './src/middleware/geoFence.js';
 import Vendor from './src/models/Vendor.js';
+import Order from './src/models/Order.js';
 
 dotenv.config();
 const app = express();
@@ -148,4 +149,75 @@ app.get('/', (req, res) => {
 });
 
 const PORT = process.env.PORT || 3000;
-httpServer.listen(PORT,"0.0.0.0", () => console.log(`VITato server running on port ${PORT}`));
+httpServer.listen(PORT,"0.0.0.0", () => console.log(`VIT-Bolt server running on port ${PORT}`));
+
+// ---------------- Background Jobs: Auto-cancel & Cleanup ----------------
+// Auto-cancel orders that remain 'placed' beyond a threshold
+const AUTOCANCEL_MINUTES = Number(process.env.AUTOCANCEL_MINUTES || 20);
+const FAULTY_CLEANUP_HOURS = Number(process.env.FAULTY_CLEANUP_HOURS || 24);
+
+async function emitVendorUpdatesForOrder(io, order) {
+  try {
+    // Populate vendors from items
+    await order.populate({ path: 'items.food', populate: { path: 'vendor', select: '_id' } });
+    const vendorIds = Array.from(new Set(order.items.map(i => i.food?.vendor?._id?.toString()).filter(Boolean)));
+    if (vendorIds.length) {
+      vendorIds.forEach(vId => io.to(`vendor_${vId}`).emit('orders_updated'));
+    } else {
+      io.emit('orders_updated');
+    }
+  } catch {
+    io.emit('orders_updated');
+  }
+}
+
+async function autoCancelPlacedOrders() {
+  try {
+    const threshold = new Date(Date.now() - AUTOCANCEL_MINUTES * 60 * 1000);
+    // Candidates: still placed and older than threshold
+    const candidates = await Order.find({ status: 'placed', createdAt: { $lt: threshold } }).limit(200);
+    if (!candidates.length) return;
+    const io = app.get('io');
+    for (const o of candidates) {
+      // Double-check current status to avoid races
+      if (o.status !== 'placed') continue;
+      o.status = 'cancelled';
+      await o.save();
+      // Notify student (user room) and any order-specific subscribers
+      io.to(o.user.toString()).emit('order_status', { orderId: o._id.toString(), status: 'cancelled' });
+      io.to(`order_${o._id.toString()}`).emit('order_status', { orderId: o._id.toString(), status: 'cancelled' });
+      // Notify vendors to refresh
+      await emitVendorUpdatesForOrder(io, o);
+    }
+  } catch (e) {
+    console.warn('[autoCancelPlacedOrders] error:', e && (e.message || e));
+  }
+}
+
+async function cleanupFaultyOrders() {
+  try {
+    const olderThan = new Date(Date.now() - FAULTY_CLEANUP_HOURS * 60 * 60 * 1000);
+    // Faulty: stuck in 'placed' and very old, and not paid (or missing payment field)
+    const filter = {
+      status: 'placed',
+      createdAt: { $lt: olderThan },
+      $or: [
+        { 'payment.status': { $exists: false } },
+        { 'payment.status': { $ne: 'paid' } }
+      ]
+    };
+    const { deletedCount } = await Order.deleteMany(filter);
+    if (deletedCount) {
+      const io = app.get('io');
+      io.emit('orders_updated');
+      console.log(`[cleanupFaultyOrders] Deleted ${deletedCount} old/inactive orders`);
+    }
+  } catch (e) {
+    console.warn('[cleanupFaultyOrders] error:', e && (e.message || e));
+  }
+}
+
+// Kick off jobs
+setInterval(autoCancelPlacedOrders, 60 * 1000); // every minute
+// Run initial sweep shortly after start
+setTimeout(() => { autoCancelPlacedOrders(); cleanupFaultyOrders(); }, 5000);

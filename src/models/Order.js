@@ -7,7 +7,7 @@ const orderSchema = new mongoose.Schema({
     quantity: Number,
     price: Number
   }],
-  status: { type: String, enum: ['placed','cooking','ready','out_for_delivery','delivered'], default: 'placed' },
+  status: { type: String, enum: ['placed','cooking','ready','out_for_delivery','delivered','cancelled'], default: 'placed' },
   deliveryPartner: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
   // Snapshot of delivery address at order time (so later edits to user profile do not change past orders)
   deliveryAddress: {
